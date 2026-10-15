@@ -1,0 +1,390 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C10000000000000000000201 /* UpPearApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000101 /* UpPearApp.swift */; };
+		C10000000000000000000202 /* UpdateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000102 /* UpdateModel.swift */; };
+		C10000000000000000000203 /* MainWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000103 /* MainWindow.swift */; };
+		C10000000000000000000204 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000104 /* MenuBarView.swift */; };
+		C10000000000000000000205 /* RecordDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000105 /* RecordDetail.swift */; };
+		C10000000000000000000206 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000106 /* SettingsView.swift */; };
+		C10000000000000000000207 /* AppScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000107 /* AppScanner.swift */; };
+		C10000000000000000000208 /* AppStoreUpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000108 /* AppStoreUpdateChecker.swift */; };
+		C10000000000000000000209 /* BrewVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000109 /* BrewVersion.swift */; };
+		C1000000000000000000020A /* CommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000010A /* CommandRunner.swift */; };
+		C1000000000000000000020B /* HomebrewUpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000010B /* HomebrewUpdateChecker.swift */; };
+		C1000000000000000000020C /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000010C /* Models.swift */; };
+		C1000000000000000000020D /* Networking.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000010D /* Networking.swift */; };
+		C1000000000000000000020E /* SparkleUpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000010E /* SparkleUpdateChecker.swift */; };
+		C1000000000000000000020F /* UpdateAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000010F /* UpdateAction.swift */; };
+		C10000000000000000000210 /* UpdateEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000110 /* UpdateEngine.swift */; };
+		C10000000000000000000211 /* VersionComparison.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000111 /* VersionComparison.swift */; };
+		C10000000000000000000221 /* LICENSE.md in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000121 /* LICENSE.md */; };
+		C10000000000000000000222 /* NOTICE.md in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000122 /* NOTICE.md */; };
+		C10000000000000000000223 /* THIRD_PARTY_NOTICES.md in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000123 /* THIRD_PARTY_NOTICES.md */; };
+		C10000000000000000000224 /* Sparkle-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000124 /* Sparkle-LICENSE.txt */; };
+		C10000000000000000000225 /* UpPear.icon in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000125 /* UpPear.icon */; };
+		C10000000000000000000230 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000021 /* Sparkle */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A10000000000000000000003 /* UpPear.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UpPear.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B10000000000000000000101 /* UpPearApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpPearApp.swift; sourceTree = "<group>"; };
+		B10000000000000000000102 /* UpdateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateModel.swift; sourceTree = "<group>"; };
+		B10000000000000000000103 /* MainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindow.swift; sourceTree = "<group>"; };
+		B10000000000000000000104 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		B10000000000000000000105 /* RecordDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordDetail.swift; sourceTree = "<group>"; };
+		B10000000000000000000106 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B10000000000000000000107 /* AppScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppScanner.swift; sourceTree = "<group>"; };
+		B10000000000000000000108 /* AppStoreUpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreUpdateChecker.swift; sourceTree = "<group>"; };
+		B10000000000000000000109 /* BrewVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewVersion.swift; sourceTree = "<group>"; };
+		B1000000000000000000010A /* CommandRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandRunner.swift; sourceTree = "<group>"; };
+		B1000000000000000000010B /* HomebrewUpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewUpdateChecker.swift; sourceTree = "<group>"; };
+		B1000000000000000000010C /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		B1000000000000000000010D /* Networking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Networking.swift; sourceTree = "<group>"; };
+		B1000000000000000000010E /* SparkleUpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkleUpdateChecker.swift; sourceTree = "<group>"; };
+		B1000000000000000000010F /* UpdateAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateAction.swift; sourceTree = "<group>"; };
+		B10000000000000000000110 /* UpdateEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateEngine.swift; sourceTree = "<group>"; };
+		B10000000000000000000111 /* VersionComparison.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionComparison.swift; sourceTree = "<group>"; };
+		B10000000000000000000120 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B10000000000000000000121 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
+		B10000000000000000000122 /* NOTICE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = NOTICE.md; sourceTree = "<group>"; };
+		B10000000000000000000123 /* THIRD_PARTY_NOTICES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = THIRD_PARTY_NOTICES.md; sourceTree = "<group>"; };
+		B10000000000000000000124 /* Sparkle-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Sparkle-LICENSE.txt"; sourceTree = "<group>"; };
+		B10000000000000000000125 /* UpPear.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = UpPear.icon; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A10000000000000000000007 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C10000000000000000000230 /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A10000000000000000000004 = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000010 /* App */,
+				A10000000000000000000011 /* Views */,
+				A10000000000000000000012 /* Core */,
+				A10000000000000000000013 /* Resources */,
+				A10000000000000000000005 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A10000000000000000000005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000003 /* UpPear.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000010 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000101 /* UpPearApp.swift */,
+				B10000000000000000000102 /* UpdateModel.swift */,
+			);
+			path = UpPear/App;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000011 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000103 /* MainWindow.swift */,
+				B10000000000000000000104 /* MenuBarView.swift */,
+				B10000000000000000000105 /* RecordDetail.swift */,
+				B10000000000000000000106 /* SettingsView.swift */,
+			);
+			path = UpPear/Views;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000012 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000107 /* AppScanner.swift */,
+				B10000000000000000000108 /* AppStoreUpdateChecker.swift */,
+				B10000000000000000000109 /* BrewVersion.swift */,
+				B1000000000000000000010A /* CommandRunner.swift */,
+				B1000000000000000000010B /* HomebrewUpdateChecker.swift */,
+				B1000000000000000000010C /* Models.swift */,
+				B1000000000000000000010D /* Networking.swift */,
+				B1000000000000000000010E /* SparkleUpdateChecker.swift */,
+				B1000000000000000000010F /* UpdateAction.swift */,
+				B10000000000000000000110 /* UpdateEngine.swift */,
+				B10000000000000000000111 /* VersionComparison.swift */,
+			);
+			path = UpPear/Core;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000013 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000120 /* Info.plist */,
+				B10000000000000000000121 /* LICENSE.md */,
+				B10000000000000000000122 /* NOTICE.md */,
+				B10000000000000000000123 /* THIRD_PARTY_NOTICES.md */,
+				B10000000000000000000124 /* Sparkle-LICENSE.txt */,
+				B10000000000000000000125 /* UpPear.icon */,
+			);
+			path = UpPear/Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A10000000000000000000002 /* UpPear */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1000000000000000000000A /* Build configuration list for PBXNativeTarget "UpPear" */;
+			buildPhases = (
+				A10000000000000000000006 /* Sources */,
+				A10000000000000000000007 /* Frameworks */,
+				A10000000000000000000008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UpPear;
+			packageProductDependencies = (
+				A10000000000000000000021 /* Sparkle */,
+			);
+			productName = UpPear;
+			productReference = A10000000000000000000003 /* UpPear.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					A10000000000000000000002 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+				};
+			};
+			buildConfigurationList = A10000000000000000000009 /* Build configuration list for PBXProject "UpPear" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = A10000000000000000000004;
+			packageReferences = (
+				A10000000000000000000020 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
+			productRefGroup = A10000000000000000000005 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A10000000000000000000002 /* UpPear */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C10000000000000000000221 /* LICENSE.md in Resources */,
+				C10000000000000000000222 /* NOTICE.md in Resources */,
+				C10000000000000000000223 /* THIRD_PARTY_NOTICES.md in Resources */,
+				C10000000000000000000224 /* Sparkle-LICENSE.txt in Resources */,
+				C10000000000000000000225 /* UpPear.icon in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A10000000000000000000006 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C10000000000000000000201 /* UpPearApp.swift in Sources */,
+				C10000000000000000000202 /* UpdateModel.swift in Sources */,
+				C10000000000000000000203 /* MainWindow.swift in Sources */,
+				C10000000000000000000204 /* MenuBarView.swift in Sources */,
+				C10000000000000000000205 /* RecordDetail.swift in Sources */,
+				C10000000000000000000206 /* SettingsView.swift in Sources */,
+				C10000000000000000000207 /* AppScanner.swift in Sources */,
+				C10000000000000000000208 /* AppStoreUpdateChecker.swift in Sources */,
+				C10000000000000000000209 /* BrewVersion.swift in Sources */,
+				C1000000000000000000020A /* CommandRunner.swift in Sources */,
+				C1000000000000000000020B /* HomebrewUpdateChecker.swift in Sources */,
+				C1000000000000000000020C /* Models.swift in Sources */,
+				C1000000000000000000020D /* Networking.swift in Sources */,
+				C1000000000000000000020E /* SparkleUpdateChecker.swift in Sources */,
+				C1000000000000000000020F /* UpdateAction.swift in Sources */,
+				C10000000000000000000210 /* UpdateEngine.swift in Sources */,
+				C10000000000000000000211 /* VersionComparison.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A1000000000000000000000B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		A1000000000000000000000C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		A1000000000000000000000D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = UpPear;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = UpPear/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.uppear.UpPear;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				UPPEAR_SOURCE_COMMIT = unversioned;
+			};
+			name = Debug;
+		};
+		A1000000000000000000000E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = UpPear;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = UpPear/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.uppear.UpPear;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				UPPEAR_SOURCE_COMMIT = unversioned;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A10000000000000000000009 /* Build configuration list for PBXProject "UpPear" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1000000000000000000000B /* Debug */,
+				A1000000000000000000000C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1000000000000000000000A /* Build configuration list for PBXNativeTarget "UpPear" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1000000000000000000000D /* Debug */,
+				A1000000000000000000000E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A10000000000000000000020 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.8.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A10000000000000000000021 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000020 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A10000000000000000000001 /* Project object */;
+}

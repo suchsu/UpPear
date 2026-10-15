@@ -1,133 +1,47 @@
-# Pearcleaner
+# UpPear
 
-### Project Status: On Hold
-> As you may have noticed, development on the app has basically stopped since end of 2025, so I wanted to provide some context.
->
-> Between a new job, joining a friend who is building a SaaS company, and other life priorities, I no longer have the time needed to actively maintain or continue development on the project.
->
-> Another major reason is that I previously relied on my work MacBook for development. After changing jobs, I no longer have access to a Mac device that I can use for personal development work, which means I’m currently unable to build, test, or release updates for the app.
->
-> Because of that, issue responses, feature work, PR reviews, and new releases are effectively on hold indefinitely for now.
->
-> The project is not abandoned entirely, and I’d still like to return to it someday if circumstances change. For now though, I want to be transparent that active development is no longer possible on my end.
->
-> Thank you to everyone who has used the app, reported issues, submitted ideas, or contributed. I genuinely appreciate all of the support the project has received.
+UpPear — Keep your Mac apps up to date.
 
+作者：**suchsu**。
 
-<br>
+[下载 UpPear 1.0.0](https://github.com/suchsu/Pearcleaner/releases/tag/uppear-1.0.0) · [DMG 安装包](https://github.com/suchsu/Pearcleaner/releases/download/uppear-1.0.0/UpPear-1.0.0-macOS-arm64.dmg)
 
-<p align="center">
-<!--    <img src="https://github.com/alienator88/Pearcleaner/assets/91337119/165f6961-f4fc-4199-bc68-580bacff6eaf" align="center" width="128" height="128" /> -->
-   <img src="https://github.com/user-attachments/assets/62cd5fcb-92d3-4d3a-9664-161a7deabd46" align="center" width="160" height="160" />
+基于 [Pearcleaner 5.4.3](https://github.com/alienator88/Pearcleaner/tree/c52695d90c43f60abd5cd10c363f2e122c65f191) 的独立原生 macOS 更新管理器。灵感和更新引擎来自 Alin Lupascu / alienator88 的 Pearcleaner；保留并适配已有检测代码，来源映射见 [PROVENANCE.md](docs/PROVENANCE.md)。
 
-   <br />
-   <strong>Status: </strong>On Hold
-   <br />
-   <strong>Version: </strong>5.4.3
-   <br />
-   <a href="https://github.com/alienator88/Pearcleaner/releases"><strong>Download</strong></a>
-    · 
-   <a href="https://github.com/alienator88/Pearcleaner/commits">Commits</a>
-  </p>
-</p>
-</br>
+## 使用
 
+需要 Apple Silicon 和 macOS 27.0 或更新。打开 DMG，将 UpPear.app 拖入 Applications，再点击“检查更新”。当前 DMG 原样封装作者提供的 1.0.0 App，签名类型为 ad-hoc。
 
-A free, source-available and fair-code licensed Mac app cleaner inspired by [Freemacsoft's AppCleaner](https://freemacsoft.net/appcleaner/) and [Sun Knudsen's Privacy Guides](https://github.com/sunknudsen/guides/tree/main/archive/how-to-clean-uninstall-macos-apps-using-appcleaner-open-source-alternative) post on his app-cleaner script.
-This project was born out of wanting to learn more on how macOS deals with app installation/uninstallation and getting more Swift experience. If you have suggestions I'm open to hearing them, submit a feature request!
+- App Store 默认中国区，保留地区回退；点击打开对应官方商店页面。
+- Homebrew Cask / Formula 按实际安装记录与自身平台分支检查，单项升级先显示命令并确认，已固定版本保持固定。
+- Sparkle 使用官方框架检查兼容更新，点击打开原应用，交由应用自身更新。
+- App Store 收据优先，多来源结果合并；查询失败和手动检查不计入确认更新数量。
 
+关闭主窗口后可通过菜单栏查看结果和重新检查。每日检查需要 App 保持运行，通知和登录启动可在设置中选择开启。
 
-### Table of Contents:
-[Features](#features) | [Screenshots](#screenshots) | [Issues](#issues) | [Requirements](#requirements) | [Download](#getting-pearcleaner) | [Translations](#translations) | [License](#license) | [Thanks](#thanks) | [Other Apps](#other-apps)
+1.0 仅包含上述更新源，不含专用 MAU、清理、卸载或 UpPear 特权 Helper。
 
-<br>
+## 构建
 
+使用 Xcode 27，打开 UpPear.xcodeproj，选择共享 scheme UpPear。App、Views、Core 同模块编译，唯一外链框架是精确固定的 Sparkle 2.8.0。
 
-
-## Features
-### Core
-- **App Uninstall • Orphaned File Search • Development Environment Manager • File Search • Homebrew Manager • App Lipo • PKG Manager • Plugin Manager • Services Manager • Apps Updater** 
-- Drag/drop apps, CLI support, and deep link automation [view](https://github.com/alienator88/Pearcleaner/wiki/Deep-Link-Guide)
-- List or Grid view with badges for web/iOS apps
-- Finder Extension for right-click uninstall
-- Pearcleaner self-uninstall and other options
-
-### Utilities
-- Prune unused app translations, keeping only preferred languages
-- Strip unneeded architectures from universal apps without requirement of lipo binary from xcode tools
-- **Sentinel Monitor**: Automatic cleanup when apps hit Trash (~2MB RAM)
-- Export app bundles and file lists
-- Basic Steam games support
-
-### Customization
-- Theme system with custom colors
-- Include/exclude directories for searching
-- Adjustable search sensitivity
-
-## Screenshots
-
-<img src="https://github.com/user-attachments/assets/5095d30c-3665-4b24-bf00-756baac59026" align="left" width="400" />
-<img src="https://github.com/user-attachments/assets/e9841914-613e-4206-b0bd-07963bf27507" align="center" width="400" />
-<p></p>
-<img src="https://github.com/user-attachments/assets/c35258c2-2886-412c-a4c4-3c5e343e7a2c" align="left" width="400" />
-<img src="https://github.com/user-attachments/assets/e6253ce4-b1e4-4851-a2c2-46b1f1e128cb" align="center" width="400" />
-
-
-## Issues
-> [!WARNING]
-> - When submitting issues, please use the appropriate issue template corresponding with your problem [HERE](https://github.com/alienator88/Pearcleaner/issues/new/choose)
-> - Issues with no template will be closed
-> - This is a personal/hobby app, therefore the project is fairly opinionated. Opinion-based requests (e.g., “the layout would look better this way”) will not be considered.
-
-## Requirements
-> [!NOTE]
-> - Full Disk permission to search for files
-> - Privileged Helper to perform actions on system folders
-
-| macOS Version | Codename | Supported |
-|---------------|----------|-----------|
-| 13.x          | Ventura  | ✅        |
-| 14.x          | Sonoma   | ✅        |
-| 15.x          | Sequoia  | ✅        |
-| 26.x          | Tahoe    | ✅        |
-| TBD           | Beta     | ❌        |
-> Versions prior to macOS 13.0 are not supported due to missing Swift/SwiftUI APIs required by the app.
-
-## Getting Pearcleaner
-
-<details>
-  <summary>Releases</summary>
-
-Pre-compiled, always up-to-date versions are available from my [releases](https://github.com/alienator88/Pearcleaner/releases) page.
-</details>
-
-<details>
-  <summary>Homebrew</summary>
-
-You can add the app via Homebrew:
+```sh
+swift test --scratch-path /private/tmp/UpPear-build
+scripts/build_app.sh Release
 ```
-brew install --cask pearcleaner
-```
-</details>
 
-## Translations
-If you are able to contribute to translations for the app, please see this discussion: https://github.com/alienator88/Pearcleaner/discussions/137
+构建中间目录默认放在临时目录，日志、缓存和软件清单放在忽略的 work/ 或 dist/。测试与 Diagnostics 的 Swift Package 可独立使用。
 
-## License
-> [!IMPORTANT]
-> Pearcleaner is licensed under Apache 2.0 with [Commons Clause](https://commonsclause.com/). This means that you can do anything you'd like with the source, modify it, contribute to it, etc., but the license explicitly prohibits any form of monetization for Pearcleaner or any modified versions of it. See full license [HERE](https://github.com/alienator88/Pearcleaner/blob/main/LICENSE.md)
+用户定稿的 Icon Composer 工程位于 UpPear/Resources/UpPear.icon，由 Xcode 原生编译，完整保留图层与外观。来源摘要见 [ICON_SOURCE.json](docs/ICON_SOURCE.json)。
 
-## Thanks
+## 检测与数据
 
-- Much appreciation to [Freemacsoft's AppCleaner](https://freemacsoft.net/appcleaner/) and [Sun Knudsen's app-cleaner script](https://github.com/sunknudsen/guides/tree/main/archive/how-to-clean-uninstall-macos-apps-using-appcleaner-open-source-alternative) for the inspiration
-- [DharsanB](https://github.com/dharsanb) for sponsoring my Apple Developer account
+商店版本元数据可能与账号实际可更新时间不同。Homebrew 的复杂 tap/latest/HEAD 不能可靠比较时保守显示，自定义 tap 静态定义需要自行刷新。Sparkle 兼容性由官方框架决定；网络和证书失败明确显示。
 
-## Some of my apps
+检查结果仅保存在本机 Application Support/UpPear/snapshot.json；版本查询会访问 Apple、Homebrew 和对应应用的更新服务器。私人交接日志、详细软件清单和本地历史包不进入公开仓库或发行包。
 
-[Pearcleaner](https://github.com/alienator88/Pearcleaner) - An opensource app cleaner with privacy in mind
+## 来源与许可
 
-[Sentinel](https://github.com/alienator88/Sentinel) - A GUI for controlling gatekeeper status on your Mac
+UpPear 是 Pearcleaner 的独立社区衍生作品，免费、公开源码（source-available），保留 **Apache 2.0 + Commons Clause**，不是 MIT 或 OSI 标准开源许可。完整条款见 [LICENSE.md](LICENSE.md)，来源和署名见 [NOTICE.md](NOTICE.md)，第三方声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。许可全文随 App 和 DMG 分发，关于页显示作者 suchsu 与 Pearcleaner 来源。
 
-[Viz](https://github.com/alienator88/Viz) - Utility for extracting text from images, videos, qr/barcodes
-
-[PearHID](https://github.com/alienator88/PearHID) - Remap your macOS keyboard with a simple SwiftUI frontend
+源码归档记录原始 1.0 构建代码提交；发行说明见 [RELEASE_NOTES.md](releases/1.0.0/RELEASE_NOTES.md)。

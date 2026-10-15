@@ -1,0 +1,12 @@
+{
+  "origin": "User-finalized Icon Composer final-v2/UpPear.icon",
+  "projectPath": "UpPear/Resources/UpPear.icon",
+  "copiedWithoutContentChanges": true,
+  "filesSHA256": {
+    "Assets/01-pear-body.svg": "5beee78cee99573aaa73442675d369d176a10c3a858672c5ea31f93a5f0715ae",
+    "Assets/02-pear-stem.svg": "8ead8b9ac57f734d9af3bd4979e75776379d04daddc57d3992ae27b766403b61",
+    "Assets/03-pear-leaf.svg": "dc066674025e3a0f2b0f64b52311a6247e9f17b63739a5379d65978d7c09d010",
+    "Assets/04-up-arrow.svg": "946db91ef448bddec0944392bdcd181a7d05f7e437e353310d12a9cdbcfd7bd8",
+    "icon.json": "63f12c04e6a29843c82ae7396ef8eb28b640e5a84fab0c360c2512e1268ed4d0"
+  }
+}

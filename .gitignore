@@ -48,6 +48,11 @@ playground.xcworkspace
 
 .build/
 
+# Modified for UpPear on 2026-10-13: keep local caches, logs and builds private.
+work/
+dist/
+.swiftpm/
+
 # CocoaPods
 #
 # We recommend against adding the Pods directory to your .gitignore. However
