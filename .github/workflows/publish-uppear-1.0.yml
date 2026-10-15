@@ -15,21 +15,22 @@ concurrency:
 
 jobs:
   release:
-    if: github.repository == 'suchsu/Pearcleaner'
+    if: github.repository_id == '1265804815'
     runs-on: ubuntu-latest
     steps:
       - name: Fetch the prepared release snapshot
         env:
           RELEASE_COMMIT: ${{ github.sha }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
         run: |
           git init --quiet .
-          git remote add origin https://github.com/suchsu/Pearcleaner.git
+          git remote add origin "https://github.com/$RELEASE_REPOSITORY.git"
           git fetch --no-tags --depth=1 origin "$RELEASE_COMMIT"
           git checkout --detach FETCH_HEAD
       - name: Publish the author-provided App DMG and core source
         env:
           GH_TOKEN: ${{ github.token }}
-          GH_REPO: suchsu/Pearcleaner
+          GH_REPO: ${{ github.repository }}
           RELEASE_COMMIT: ${{ github.sha }}
         working-directory: releases/1.0.0
         run: |

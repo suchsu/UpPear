@@ -4,7 +4,7 @@ UpPear — Keep your Mac apps up to date.
 
 作者：**suchsu**。
 
-[下载 UpPear 1.0.0](https://github.com/suchsu/Pearcleaner/releases/tag/uppear-v1.0.0) · [DMG 安装包](https://github.com/suchsu/Pearcleaner/releases/download/uppear-v1.0.0/UpPear-1.0.0-macOS-arm64.dmg)
+[下载 UpPear 1.0.0](https://github.com/suchsu/UpPear/releases/tag/uppear-v1.0.0) · [DMG 安装包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.0.0/UpPear-1.0.0-macOS-arm64.dmg)
 
 基于 [Pearcleaner 5.4.3](https://github.com/alienator88/Pearcleaner/tree/c52695d90c43f60abd5cd10c363f2e122c65f191) 的独立原生 macOS 更新管理器。灵感和更新引擎来自 Alin Lupascu / alienator88 的 Pearcleaner；保留并适配已有检测代码，来源映射见 [PROVENANCE.md](docs/PROVENANCE.md)。
 
