@@ -1,6 +1,9 @@
 import AppKit
 import SwiftUI
 
+// Modified for UpPear 1.0.1: keep split-pane identity stable when the user
+// clears list selection by clicking unused space.
+
 enum AppFilter: String, CaseIterable, Identifiable {
     case updates, all, failed, unsupported, ignored, appStore, homebrew, sparkle
     var id: String { rawValue }
@@ -92,13 +95,16 @@ struct MainWindow: View {
                             .font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 18).padding(.vertical, 10)
                     }.frame(minWidth: 320, idealWidth: 420)
-                    if let selectedRecord {
-                        RecordDetail(record: selectedRecord, model: model).frame(minWidth: 280, idealWidth: 310, maxWidth: 420)
-                    } else {
-                        ContentUnavailableView("选择一个项目", systemImage: "sidebar.right", description: Text("查看版本、更新来源和官方更新入口。"))
-                            .frame(minWidth: 280, idealWidth: 310, maxWidth: 420)
-                    }
-                }
+                    // Keep one arranged subview in HSplitView across selection
+                    // changes so AppKit preserves the user's divider position.
+                    VStack(spacing: 0) {
+                        if let selectedRecord {
+                            RecordDetail(record: selectedRecord, model: model)
+                        } else {
+                            ContentUnavailableView("选择一个项目", systemImage: "sidebar.right", description: Text("查看版本、更新来源和官方更新入口。"))
+                        }
+                    }.frame(minWidth: 280, idealWidth: 310, maxWidth: 420, maxHeight: .infinity)
+                }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 if let message = model.errorMessage {
                     HStack {
                         Label(message, systemImage: "exclamationmark.circle").font(.callout).textSelection(.enabled)
@@ -112,6 +118,7 @@ struct MainWindow: View {
                     }.font(.caption).padding(.horizontal, 16).padding(.vertical, 8)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .navigationTitle(filter?.title ?? "UpPear")
             .searchable(text: $search, placement: .toolbar, prompt: "搜索软件")
             .toolbar {
