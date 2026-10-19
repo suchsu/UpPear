@@ -97,3 +97,12 @@ iOSInjectionProject/
 Builds/Export
 .claude
 Pearcleaner/Resources/Localizable.xcstrings.bak
+
+# Private validation and distribution tools stay outside this production repository.
+Tests/
+Tools/
+.github/
+scripts/package_app.sh
+scripts/sign_app.sh
+scripts/verify_app.sh
+docs/DISTRIBUTION.md

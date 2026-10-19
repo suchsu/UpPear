@@ -164,7 +164,6 @@ struct MainWindow: View {
             VStack(alignment: .trailing, spacing: 6) {
                 Text("\(model.records.count) 个软件与软件包").font(.callout)
                 if model.failureCount > 0 { Label("\(model.failureCount) 个检查失败", systemImage: "exclamationmark.circle").font(.caption).foregroundStyle(.orange) }
-                if model.isFixture { Text("界面验证示例").font(.caption).foregroundStyle(.secondary) }
             }
         }.padding(22)
     }

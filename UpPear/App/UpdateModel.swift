@@ -1,3 +1,4 @@
+// Modified for UpPear: fixture models are maintained only in local validation sources.
 import AppKit
 import Foundation
 import Observation
@@ -21,7 +22,6 @@ final class UpdateModel {
     var notifyNewUpdates: Bool { didSet { defaults.set(notifyNewUpdates, forKey: "notifyNewUpdates") } }
     var ignoredIDs: Set<String>
     var loginEnabled = SMAppService.mainApp.status == .enabled
-    let isFixture: Bool
 
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private let cacheURL: URL
@@ -37,9 +37,8 @@ final class UpdateModel {
     var ignoredCount: Int { ignoredIDs.count }
     var needsCheck: Bool { snapshot.map { Date().timeIntervalSince($0.completedAt) >= 86400 } ?? true }
 
-    init(isFixture: Bool = false) {
-        self.isFixture = isFixture
-        defaults = isFixture ? UserDefaults(suiteName: "org.uppear.UpPear.UISmoke")! : .standard
+    init() {
+        defaults = .standard
         primaryRegion = defaults.string(forKey: "primaryRegion") ?? "CN"
         includePreReleases = defaults.bool(forKey: "includePreReleases")
         includeFormulae = defaults.object(forKey: "includeFormulae") as? Bool ?? true
@@ -48,8 +47,7 @@ final class UpdateModel {
         ignoredIDs = Set(defaults.stringArray(forKey: "ignoredIDs") ?? [])
         cacheURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("UpPear/snapshot.json")
-        if isFixture { snapshot = Self.fixtureSnapshot() }
-        else if let data = try? Data(contentsOf: cacheURL) {
+        if let data = try? Data(contentsOf: cacheURL) {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             snapshot = try? decoder.decode(ScanSnapshot.self, from: data)
@@ -59,21 +57,18 @@ final class UpdateModel {
     func start() {
         guard !started else { return }
         started = true
-        if !isFixture {
-            if needsCheck { checkNow() }
-            timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
-                Task { @MainActor in
-                    guard let self, self.dailyCheck, self.needsCheck, !self.isChecking, !self.isUpgrading,
-                          self.lastAttempt.map({ Date().timeIntervalSince($0) >= 3600 }) ?? true else { return }
-                    self.checkNow()
-                }
+        if needsCheck { checkNow() }
+        timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.dailyCheck, self.needsCheck, !self.isChecking, !self.isUpgrading,
+                      self.lastAttempt.map({ Date().timeIntervalSince($0) >= 3600 }) ?? true else { return }
+                self.checkNow()
             }
         }
     }
 
     func checkNow() {
         guard !isChecking, !isUpgrading else { return }
-        if isFixture { snapshot = Self.fixtureSnapshot(); return }
         isChecking = true
         errorMessage = nil
         lastAttempt = Date()
@@ -127,7 +122,7 @@ final class UpdateModel {
     }
 
     func upgrade(_ record: UpdateRecord) {
-        guard !isFixture, !isChecking, !isUpgrading,
+        guard !isChecking, !isUpgrading,
               case .brewUpgrade(let plan) = ActionResolver.action(for: record, primaryRegion: primaryRegion) else { return }
         if let app = record.app,
            NSWorkspace.shared.runningApplications.contains(where: { $0.bundleURL?.resolvingSymlinksInPath() == app.path.resolvingSymlinksInPath() }) {
@@ -169,7 +164,6 @@ final class UpdateModel {
 
     func setNotifications(_ enabled: Bool) {
         if !enabled { notifyNewUpdates = false; return }
-        guard !isFixture else { return }
         Task {
             do {
                 notifyNewUpdates = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
@@ -179,7 +173,6 @@ final class UpdateModel {
     }
 
     func setLoginEnabled(_ enabled: Bool) {
-        guard !isFixture else { return }
         do {
             if enabled { try SMAppService.mainApp.register() }
             else { try SMAppService.mainApp.unregister() }
@@ -192,7 +185,6 @@ final class UpdateModel {
     }
 
     private func persist(_ snapshot: ScanSnapshot) {
-        guard !isFixture else { return }
         do {
             try FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
             let encoder = JSONEncoder()
@@ -214,19 +206,4 @@ final class UpdateModel {
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "new-updates", content: content, trigger: nil))
     }
 
-    private static func fixtureSnapshot() -> ScanSnapshot {
-        let store = AppInfo(path: URL(fileURLWithPath: "/Applications/Sample Editor.app"), bundleIdentifier: "test.editor",
-                            appName: "Sample Editor", appVersion: "2.1", isAppStore: true, adamID: 123456789)
-        let sparkle = AppInfo(path: URL(fileURLWithPath: "/Applications/Sample Player.app"), bundleIdentifier: "test.player",
-                              appName: "Sample Player", appVersion: "1.4", appBuildNumber: "14", feedURL: URL(string: "https://example.com/appcast.xml"))
-        let unknown = AppInfo(path: URL(fileURLWithPath: "/Applications/Office.app"), bundleIdentifier: "test.office", appName: "Office", appVersion: "16.0")
-        return ScanSnapshot(records: [
-            .init(app: store, source: .appStore, state: .updateAvailable, detail: "请通过 App Store 完成更新。", availableVersion: "2.2", releaseNotes: "改进稳定性，修复编辑器中的问题。", foundInRegion: "CN", adamID: 123456789),
-            .init(app: nil, source: .homebrewFormula, state: .updateAvailable, detail: "可通过 Homebrew 单项升级。", name: "sample-tool", installedVersion: "1.2.0_1", availableVersion: "1.2.0_2", packageName: "sample-tool", brewExecutable: URL(fileURLWithPath: "/opt/homebrew/bin/brew")),
-            .init(app: sparkle, source: .sparkle, state: .updateAvailable, detail: "请打开应用，使用应用自带的更新功能。", availableVersion: "1.5", availableBuild: "15"),
-            .init(app: nil, source: .appStore, state: .failed, detail: "检查超时，请稍后重试。", name: "Sample Notes", installedVersion: "3.0"),
-            .init(app: unknown, source: .unsupported, state: .unsupported, detail: "当前未识别到支持的更新来源，请在应用内手动检查。"),
-            .init(app: nil, source: .homebrewFormula, state: .current, detail: "Homebrew 更新源未显示更高版本。", name: "sample-library", installedVersion: "4.0", availableVersion: "4.0")
-        ])
-    }
 }

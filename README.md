@@ -26,11 +26,11 @@ UpPear — Keep your Mac apps up to date.
 使用 Xcode 27，打开 UpPear.xcodeproj，选择共享 scheme UpPear。App、Views、Core 同模块编译，唯一外链框架是精确固定的 Sparkle 2.8.0。
 
 ```sh
-swift test --scratch-path /private/tmp/UpPear-build
+swift build --scratch-path /private/tmp/UpPear-build
 scripts/build_app.sh Release
 ```
 
-构建中间目录默认放在临时目录，日志、缓存和软件清单放在忽略的 work/ 或 dist/。测试与 Diagnostics 的 Swift Package 可独立使用。
+构建中间目录默认放在临时目录，日志、缓存和软件清单放在忽略的 work/ 或 dist/。Swift Package 可独立构建核心库。测试、诊断工具与签名发布流程在本地维护，不进入公开源码。
 
 用户定稿的 Icon Composer 工程位于 UpPear/Resources/UpPear.icon，由 Xcode 原生编译，完整保留图层与外观。来源摘要见 [ICON_SOURCE.json](docs/ICON_SOURCE.json)。
 
