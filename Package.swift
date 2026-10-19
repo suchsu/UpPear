@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "UpPear",
-    platforms: [.macOS("27.0")],
+    platforms: [.macOS(.v14)],
     products: [
         .library(name: "UpPearCore", targets: ["UpPearCore"])
     ],

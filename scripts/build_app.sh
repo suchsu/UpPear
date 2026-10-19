@@ -13,6 +13,10 @@ set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIGURATION="${1:-Debug}"
+UPPEAR_BUILD_DESTINATION='platform=macOS'
+if [[ "$CONFIGURATION" == Release ]]; then
+  UPPEAR_BUILD_DESTINATION='generic/platform=macOS'
+fi
 DERIVED_DATA="${UPPEAR_DERIVED_DATA:-/private/tmp/UpPear-dd}"
 UPPEAR_SOURCE_REVISION="${UPPEAR_SOURCE_COMMIT:-}"
 if [[ -z "$UPPEAR_SOURCE_REVISION" ]]; then
@@ -32,7 +36,7 @@ xcodebuild \
   -project UpPear.xcodeproj \
   -scheme UpPear \
   -configuration "$CONFIGURATION" \
-  -destination 'platform=macOS' \
+  -destination "$UPPEAR_BUILD_DESTINATION" \
   -derivedDataPath "$DERIVED_DATA" \
   UPPEAR_SOURCE_COMMIT="$UPPEAR_SOURCE_REVISION" \
   build

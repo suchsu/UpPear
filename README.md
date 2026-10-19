@@ -4,13 +4,13 @@ UpPear — Keep your Mac apps up to date.
 
 作者：**suchsu**。
 
-[下载 UpPear 1.0.0](https://github.com/suchsu/UpPear/releases/tag/uppear-v1.0.0) · [DMG 安装包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.0.0/UpPear-1.0.0-macOS-arm64.dmg)
+[下载 UpPear 1.0.1](https://github.com/suchsu/UpPear/releases/tag/uppear-v1.0.1) · [DMG 安装包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.0.1/UpPear-1.0.1-macOS-universal.dmg)
 
 基于 [Pearcleaner 5.4.3](https://github.com/alienator88/Pearcleaner/tree/c52695d90c43f60abd5cd10c363f2e122c65f191) 的独立原生 macOS 更新管理器。灵感和更新引擎来自 Alin Lupascu / alienator88 的 Pearcleaner；保留并适配已有检测代码，来源映射见 [PROVENANCE.md](docs/PROVENANCE.md)。
 
 ## 使用
 
-需要 Apple Silicon 和 macOS 27.0 或更新。打开 DMG，将 UpPear.app 拖入 Applications，再点击“检查更新”。当前 DMG 原样封装作者提供的 1.0.0 App，签名类型为 ad-hoc。
+支持 macOS 14 或更新版本，兼容 Apple Silicon 和 Intel Mac。打开 DMG，沿箭头将 UpPear.app 拖入 Applications，再点击“检查更新”。安装包已完成开发者签名和 Apple 公证。
 
 - App Store 默认中国区，保留地区回退；点击打开对应官方商店页面。
 - Homebrew Cask / Formula 按实际安装记录与自身平台分支检查，单项升级先显示命令并确认，已固定版本保持固定。
@@ -44,4 +44,4 @@ scripts/build_app.sh Release
 
 UpPear 是 Pearcleaner 的独立社区衍生作品，免费、公开源码（source-available），保留 **Apache 2.0 + Commons Clause**，不是 MIT 或 OSI 标准开源许可。完整条款见 [LICENSE.md](LICENSE.md)，来源和署名见 [NOTICE.md](NOTICE.md)，第三方声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。许可全文随 App 和 DMG 分发，关于页显示作者 suchsu 与 Pearcleaner 来源。
 
-源码归档记录原始 1.0 构建代码提交；发行说明见 [RELEASE_NOTES.md](releases/1.0.0/RELEASE_NOTES.md)。
+源码归档中的 SOURCE_REVISION 记录对应构建提交；发行说明见 [GitHub Releases](https://github.com/suchsu/UpPear/releases/tag/uppear-v1.0.1)。
