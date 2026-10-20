@@ -1,21 +1,34 @@
 import Foundation
 
+// Modified for UpPear 1.1: MAU owns its registered application channel;
+// extension IDs stay independent from their host application's ignored ID.
+
 public enum UpdateEngine {
     public static func scan(options: CheckOptions,
         progress: @escaping @Sendable (ScanProgress) async -> Void = { _ in }) async throws -> ScanSnapshot {
         await progress(ScanProgress("正在读取已安装应用…"))
         let scan = await Task.detached(priority: .utility) { AppScanner.scan() }.value
         try Task.checkCancellation()
-        let inventory = await Task.detached(priority: .utility) {
-            HomebrewUpdateChecker.loadInstalledPackages(apps: scan.apps, includeFormulae: options.includeFormulae)
+        let updater = MicrosoftAutoUpdateChecker.installedUpdater()
+        var installedApps = scan.apps
+        if let updater, !installedApps.contains(where: { $0.id == updater.id }) { installedApps.append(updater) }
+        let allApps = installedApps
+        let host = allApps.first { $0.bundleIdentifier == "com.pilotmoon.popclip" }
+        let extensions = await Task.detached(priority: .utility) {
+            host == nil ? PopClipInventory(extensions: [], warnings: []) : PopClipExtensionScanner.scan()
         }.value
-        let packages = inventory.packages.filter { !options.ignoredIDs.contains($0.id) }
-        let apps = scan.apps.filter { !options.ignoredIDs.contains($0.id) }
+        let inventory = await Task.detached(priority: .utility) {
+            HomebrewUpdateChecker.loadInstalledPackages(apps: allApps, includeFormulae: options.includeFormulae)
+        }.value
+        let microsoftIDs = Set(allApps.filter(MicrosoftAutoUpdateChecker.isCandidate).map(\.id))
+        let packages = inventory.packages.filter { !options.ignoredIDs.contains($0.id) && !microsoftIDs.contains($0.id) }
+        let apps = allApps.filter { !options.ignoredIDs.contains($0.id) }
         let masApps = apps.filter(\.isAppStore)
-        let sparkleApps = apps.filter { !$0.isAppStore && !$0.isSetapp && $0.feedURL != nil }
-        let supportedIDs = Set(packages.map(\.id) + masApps.map(\.id) + sparkleApps.map(\.id))
-        var records = scan.apps.filter { options.ignoredIDs.contains($0.id) || !supportedIDs.contains($0.id) }.map { app in
-            UpdateRecord(app: app, source: app.isAppStore ? .appStore : (app.feedURL == nil ? .unsupported : .sparkle),
+        let microsoftApps = apps.filter(MicrosoftAutoUpdateChecker.isCandidate)
+        let sparkleApps = apps.filter { !$0.isAppStore && !$0.isSetapp && $0.feedURL != nil && !microsoftIDs.contains($0.id) }
+        let supportedIDs = Set(packages.map(\.id) + masApps.map(\.id) + sparkleApps.map(\.id) + microsoftApps.map(\.id))
+        var records = allApps.filter { options.ignoredIDs.contains($0.id) || !supportedIDs.contains($0.id) }.map { app in
+            UpdateRecord(app: app, source: app.isAppStore ? .appStore : (microsoftIDs.contains(app.id) ? .microsoftAutoUpdate : (app.feedURL == nil ? .unsupported : .sparkle)),
                 state: options.ignoredIDs.contains(app.id) ? .skipped : .unsupported,
                 detail: options.ignoredIDs.contains(app.id) ? "已从自动检查中忽略，可在详情中恢复。"
                     : (app.isSetapp ? "此应用由 Setapp 管理，请通过 Setapp 检查更新。" : "当前未识别到支持的更新来源，请在应用内手动检查。"))
@@ -25,8 +38,9 @@ public enum UpdateEngine {
                 id: package.id, name: package.name, installedVersion: package.version,
                 packageName: package.name, brewExecutable: package.brewExecutable, isPinned: package.isPinned)
         }
-        let counter = ProgressCounter(total: packages.count + masApps.count + sparkleApps.count, progress: progress)
-        await progress(ScanProgress("正在查询更新源…", total: packages.count + masApps.count + sparkleApps.count))
+        let total = packages.count + masApps.count + sparkleApps.count + microsoftApps.count + extensions.extensions.count
+        let counter = ProgressCounter(total: total, progress: progress)
+        await progress(ScanProgress("正在查询更新源…", total: total))
         async let storeResults = checkInBatches(masApps) { app in
             let result = await AppStoreUpdateChecker.check(app: app, primaryRegion: options.primaryRegion)
             await counter.didCheck(app.appName)
@@ -42,17 +56,29 @@ public enum UpdateEngine {
             await counter.didCheck(package.displayName ?? package.name)
             return result
         }
-        let checked = await (storeResults, sparkleResults, brewResults)
+        async let microsoftResults: [UpdateRecord] = {
+            let results = await MicrosoftAutoUpdateChecker.check(apps: microsoftApps, updater: updater)
+            for record in results { await counter.didCheck(record.name) }
+            return results
+        }()
+        async let popClipResults: [UpdateRecord] = {
+            guard let host else { return [] }
+            return await PopClipUpdateChecker.check(host: host, inventory: extensions, ignoredIDs: options.ignoredIDs) {
+                await counter.didCheck("PopClip · \($0)")
+            }
+        }()
+        let checked = await (storeResults, sparkleResults, brewResults, microsoftResults, popClipResults)
         try Task.checkCancellation()
-        records += checked.0 + checked.1 + checked.2
+        records += checked.0 + checked.1 + checked.2 + checked.3 + checked.4
         let merged = merge(records: records).sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-        return ScanSnapshot(records: merged, warnings: scan.warnings + inventory.warnings)
+        return ScanSnapshot(records: merged, warnings: scan.warnings + inventory.warnings + extensions.warnings)
     }
 
     static func merge(records: [UpdateRecord]) -> [UpdateRecord] {
         let groups = Dictionary(grouping: records, by: \.id)
         return groups.values.compactMap { values in
             if let mas = values.first(where: { $0.source == .appStore }) { return mas }
+            if let microsoft = values.first(where: { $0.source == .microsoftAutoUpdate }) { return microsoft }
             let updates = values.filter { $0.state == .updateAvailable }
             if !updates.isEmpty {
                 return updates.sorted {

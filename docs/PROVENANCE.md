@@ -46,3 +46,7 @@ LICENSE.md 与上游 5.4.3 完全一致。NOTICE.md / THIRD_PARTY_NOTICES.md 与
 此定稿替换上述早期 create_icon.swift / ICNS 方案；旧图标和旧生成脚本已从当前工作树移除，仍可在历史检查点恢复。Xcode 工程使用 folder.iconcomposer.icon 原生资源类型与 ASSETCATALOG_COMPILER_APPICON_NAME=UpPear，直接由 actool 编译 Assets.car 和系统生成的 UpPear.icns；Info.plist 的图标声明由编译器合并。所有轮廓、层序、颜色、外观特化、Liquid Glass 和透明度均由未改写的用户工程驱动。
 
 接入方式依据 [Apple Icon Composer 文档](https://developer.apple.com/documentation/xcode/creating-your-app-icon-using-icon-composer) 和本机 Xcode 27 的 StandardFileTypes / AssetCatalogCompiler 规范。许可、更新引擎和来源署名保持不变。
+
+## 2026-10-19 UpPear 1.1
+
+新增的 MicrosoftAutoUpdateChecker、PopClipExtensionScanner、PopClipDirectoryClient、PopClipUpdateChecker 为 UpPear 新代码，不来自 Pearcleaner。它们只读使用官方工具、包元数据与公开目录；数据依据及行为见 UPDATES_1_1.md。Models/UpdateEngine/UpdateAction 与 App/Views 增加两个来源、兼容性与版本待确认状态、独立扩展身份和官方入口；保留 1.0.1 的分栏结构和 macOS 14/通用版设置。没有增加第三方代码依赖，许可证和用户定稿图标不变。

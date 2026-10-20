@@ -21,6 +21,7 @@ final class UpdateModel {
     var dailyCheck: Bool { didSet { defaults.set(dailyCheck, forKey: "dailyCheck") } }
     var notifyNewUpdates: Bool { didSet { defaults.set(notifyNewUpdates, forKey: "notifyNewUpdates") } }
     var ignoredIDs: Set<String>
+    private(set) var skippedVersions: [String: SkippedUpdate]
     var loginEnabled = SMAppService.mainApp.status == .enabled
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -31,27 +32,42 @@ final class UpdateModel {
     @ObservationIgnored private var lastAttempt: Date?
     @ObservationIgnored private var icons: [String: NSImage] = [:]
 
-    var records: [UpdateRecord] { snapshot?.records ?? [] }
-    var updateCount: Int { snapshot?.updateCount ?? 0 }
+    var records: [UpdateRecord] { UpdateSkipPolicy.applying(skippedVersions, to: snapshot?.records ?? []) }
+    var updateCount: Int { records.filter { $0.state == .updateAvailable }.count }
     var failureCount: Int { snapshot?.failureCount ?? 0 }
     var ignoredCount: Int { ignoredIDs.count }
-    var needsCheck: Bool { snapshot.map { Date().timeIntervalSince($0.completedAt) >= 86400 } ?? true }
+    var skippedRecords: [UpdateRecord] {
+        let byID = Dictionary(grouping: records, by: \.id)
+        return skippedVersions.map { id, target in
+            byID[id]?.first ?? UpdateRecord(app: nil, source: target.source, state: .versionSkipped,
+                detail: "当前检查结果中没有此项目，可在这里移除其跳过设置。", id: id, name: target.name,
+                installedVersion: "", availableVersion: target.version, availableBuild: target.build)
+        }
+    }
+    var needsCheck: Bool {
+        snapshot.map { $0.schemaVersion != ScanSnapshot.currentSchemaVersion || Date().timeIntervalSince($0.completedAt) >= 86400 } ?? true
+    }
 
-    init() {
-        defaults = .standard
+    init(defaults: UserDefaults = .standard, cacheURL: URL? = nil) {
+        self.defaults = defaults
         primaryRegion = defaults.string(forKey: "primaryRegion") ?? "CN"
         includePreReleases = defaults.bool(forKey: "includePreReleases")
         includeFormulae = defaults.object(forKey: "includeFormulae") as? Bool ?? true
         dailyCheck = defaults.object(forKey: "dailyCheck") as? Bool ?? true
         notifyNewUpdates = defaults.bool(forKey: "notifyNewUpdates")
         ignoredIDs = Set(defaults.stringArray(forKey: "ignoredIDs") ?? [])
-        cacheURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        skippedVersions = defaults.data(forKey: "skippedVersions").flatMap {
+            try? JSONDecoder().decode([String: SkippedUpdate].self, from: $0)
+        } ?? [:]
+        self.cacheURL = cacheURL ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("UpPear/snapshot.json")
-        if let data = try? Data(contentsOf: cacheURL) {
+        if let data = try? Data(contentsOf: self.cacheURL) {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             snapshot = try? decoder.decode(ScanSnapshot.self, from: data)
         }
+        skippedVersions = skippedVersions.filter { !ignoredIDs.contains($0.key) }
+        skippedVersions = UpdateSkipPolicy.retaining(skippedVersions, after: snapshot?.records ?? [])
     }
 
     func start() {
@@ -83,6 +99,8 @@ final class UpdateModel {
                 }
                 try Task.checkCancellation()
                 let previous = self.snapshot
+                self.skippedVersions = UpdateSkipPolicy.retaining(self.skippedVersions, after: result.records)
+                self.persistSkippedVersions()
                 self.snapshot = result
                 self.persist(result)
                 self.notifyIfNeeded(result, previous: previous)
@@ -100,21 +118,39 @@ final class UpdateModel {
         guard !isChecking, !isUpgrading else { return }
         if ignoredIDs.contains(record.id) { ignoredIDs.remove(record.id) }
         else { ignoredIDs.insert(record.id) }
+        skippedVersions.removeValue(forKey: record.id)
+        persistSkippedVersions()
         defaults.set(Array(ignoredIDs).sorted(), forKey: "ignoredIDs")
         checkNow()
     }
 
+    func skipUpdate(_ record: UpdateRecord) {
+        guard !isChecking, !isUpgrading, !ignoredIDs.contains(record.id),
+              let target = SkippedUpdate(record: record) else { return }
+        skippedVersions[record.id] = target
+        persistSkippedVersions()
+    }
+
+    func restoreSkippedUpdate(_ record: UpdateRecord) {
+        guard !isChecking, !isUpgrading else { return }
+        skippedVersions.removeValue(forKey: record.id)
+        persistSkippedVersions()
+    }
+
     func performAction(_ record: UpdateRecord) {
+        guard !isChecking, !isUpgrading else { return }
         switch ActionResolver.action(for: record, primaryRegion: primaryRegion) {
         case .appStore(let url):
             if !NSWorkspace.shared.open(url) { errorMessage = "无法打开 App Store。" }
-        case .openApplication(let url):
+        case .openApplication(let url), .microsoftAutoUpdate(let url):
             let configuration = NSWorkspace.OpenConfiguration()
             NSWorkspace.shared.openApplication(at: url, configuration: configuration) { [weak self] _, error in
                 if let error { Task { @MainActor in self?.errorMessage = error.localizedDescription } }
             }
         case .brewUpgrade:
             pendingUpgrade = record
+        case .extensionDownload(let url), .officialPage(let url):
+            if !NSWorkspace.shared.open(url) { errorMessage = "无法打开官方更新入口。" }
         case .manual:
             errorMessage = record.isPinned ? "此 Formula 已固定版本。请在 Homebrew 中自行解除固定后再升级。"
                 : "请使用软件或软件包的官方更新工具手动检查。"
@@ -156,7 +192,7 @@ final class UpdateModel {
 
     func icon(for record: UpdateRecord) -> NSImage {
         if let image = icons[record.id] { return image }
-        let image = record.app.map { NSWorkspace.shared.icon(forFile: $0.path.path) }
+        let image = (record.app ?? record.popClip?.host).map { NSWorkspace.shared.icon(forFile: $0.path.path) }
             ?? NSImage(systemSymbolName: "shippingbox", accessibilityDescription: record.source.title)!
         icons[record.id] = image
         return image
@@ -193,11 +229,18 @@ final class UpdateModel {
         } catch { errorMessage = "检查已完成，但结果未能保存：\(error.localizedDescription)" }
     }
 
+    private func persistSkippedVersions() {
+        do { defaults.set(try JSONEncoder().encode(skippedVersions), forKey: "skippedVersions") }
+        catch { errorMessage = "跳过设置未能保存：\(error.localizedDescription)" }
+    }
+
     private func notifyIfNeeded(_ result: ScanSnapshot, previous: ScanSnapshot?) {
         guard notifyNewUpdates else { return }
         func fingerprint(_ record: UpdateRecord) -> String { record.id + "@" + (record.availableVersion ?? "") + "+" + (record.availableBuild ?? "") }
-        let seen = Set((previous?.records ?? []).filter { $0.state == .updateAvailable }.map(fingerprint))
-        let newUpdates = result.records.filter { $0.state == .updateAvailable && !seen.contains(fingerprint($0)) }
+        let seen = Set(UpdateSkipPolicy.applying(skippedVersions, to: previous?.records ?? [])
+            .filter { $0.state == .updateAvailable }.map(fingerprint))
+        let newUpdates = UpdateSkipPolicy.applying(skippedVersions, to: result.records)
+            .filter { $0.state == .updateAvailable && !seen.contains(fingerprint($0)) }
         guard !newUpdates.isEmpty else { return }
         let content = UNMutableNotificationContent()
         content.title = "UpPear 发现 \(newUpdates.count) 个新更新"

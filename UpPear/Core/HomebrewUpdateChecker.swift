@@ -97,8 +97,13 @@ enum HomebrewUpdateChecker {
                 }
                 paths.insert(path.resolvingSymlinksInPath().standardizedFileURL.path)
             }
-            if let ids = artifact["quit"] as? [String] { bundleIDs.formUnion(ids) }
-            if let id = artifact["quit"] as? String { bundleIDs.insert(id) }
+            // PKG receipts put quit bundle IDs inside an uninstall stanza.
+            // Only read installation identity; never evaluate uninstall or zap.
+            let directives = [artifact] + (artifact["uninstall"] as? [[String: Any]] ?? [])
+            for directive in directives {
+                if let ids = directive["quit"] as? [String] { bundleIDs.formUnion(ids) }
+                if let id = directive["quit"] as? String { bundleIDs.insert(id) }
+            }
         }
         return apps.filter { app in
             if paths.contains(app.path.resolvingSymlinksInPath().standardizedFileURL.path) { return true }
@@ -196,12 +201,22 @@ enum HomebrewUpdateChecker {
     static func isOutdated(package: InstalledPackage, actualVersion: String,
                            latestVersion: String, apiBundleVersion: String?) -> Bool {
         if !package.isCask { return PkgVersion(latestVersion) > PkgVersion(actualVersion) }
-        let installed = Version(versionNumber: actualVersion.stripBrewRevisionSuffix(), buildNumber: nil)
-        let available = Version(versionNumber: latestVersion.stripBrewRevisionSuffix(), buildNumber: nil)
+        let bundle = package.app.map { Version(versionNumber: $0.appVersion, buildNumber: $0.appBuildNumber) }
+        let actual = Version(versionNumber: actualVersion.stripBrewRevisionSuffix(), buildNumber: nil)
+        let latest = Version(versionNumber: latestVersion.stripBrewRevisionSuffix(), buildNumber: nil)
+        // Compare equivalent display versions when a source appends the exact
+        // installed build, e.g. 2.20.1.2627 versus bundle 2.20.1 (2627).
+        let normalizedActual = bundle.map { actual.sanitize(with: $0) } ?? actual
+        let normalizedLatest = bundle.map { latest.sanitize(with: $0) } ?? latest
+        let installed = Version(versionNumber: normalizedActual.versionNumber ?? actual.versionNumber, buildNumber: nil)
+        let available = Version(versionNumber: normalizedLatest.versionNumber ?? latest.versionNumber, buildNumber: nil)
+        if normalizedLatest.versionNumber == nil,
+           normalizedLatest.buildNumber == package.app?.appBuildNumber, apiBundleVersion == nil { return false }
         guard !installed.isEmpty, !available.isEmpty else { return false }
         if available > installed { return true }
-        if available == installed, let installedBundle = package.app?.appBuildNumber, let apiBundleVersion {
-            return Version(versionNumber: apiBundleVersion, buildNumber: nil) > Version(versionNumber: installedBundle, buildNumber: nil)
+        if available == installed, let installedBundle = package.app?.appBuildNumber,
+           let availableBundle = apiBundleVersion ?? normalizedLatest.buildNumber {
+            return Version(versionNumber: availableBundle, buildNumber: nil) > Version(versionNumber: installedBundle, buildNumber: nil)
         }
         return false
     }

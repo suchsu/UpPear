@@ -4,6 +4,8 @@ UpPear — Keep your Mac apps up to date.
 
 作者：**suchsu**。
 
+当前源码：**1.1.0**，新增 Microsoft AutoUpdate 和 PopClip 扩展支持。下方为已发布的 1.0.1 下载入口；1.1 的本地构建尚未对外发布。
+
 [下载 UpPear 1.0.1](https://github.com/suchsu/UpPear/releases/tag/uppear-v1.0.1) · [DMG 安装包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.0.1/UpPear-1.0.1-macOS-universal.dmg)
 
 基于 [Pearcleaner 5.4.3](https://github.com/alienator88/Pearcleaner/tree/c52695d90c43f60abd5cd10c363f2e122c65f191) 的独立原生 macOS 更新管理器。灵感和更新引擎来自 Alin Lupascu / alienator88 的 Pearcleaner；保留并适配已有检测代码，来源映射见 [PROVENANCE.md](docs/PROVENANCE.md)。
@@ -15,11 +17,15 @@ UpPear — Keep your Mac apps up to date.
 - App Store 默认中国区，保留地区回退；点击打开对应官方商店页面。
 - Homebrew Cask / Formula 按实际安装记录与自身平台分支检查，单项升级先显示命令并确认，已固定版本保持固定。
 - Sparkle 使用官方框架检查兼容更新，点击打开原应用，交由应用自身更新。
+- Microsoft 官网版软件通过本机 Microsoft AutoUpdate 检查，显示当前更新频道，点击打开官方更新器安装；App Store 版继续通过商店检查。
+- PopClip 扩展按唯一标识符匹配官方目录，读取独立的发布版本号，核实当前 PopClip 构建与 macOS 的最低要求。不兼容时尽力查找并核实历史兼容版本。
+- 可以单独忽略 PopClip 主程序，继续检查扩展。缺少可靠版本、自定义扩展和不兼容版本均不计入可用更新；下载后由 PopClip 自己确认安装。
 - App Store 收据优先，多来源结果合并；查询失败和手动检查不计入确认更新数量。
+- “跳过此更新”只隐藏当前版本，继续检查后续新版；“忽略此项目”停止自动检查。两者可在“忽略与跳过”入口分别管理和恢复，退出重开后仍保留。
 
 关闭主窗口后可通过菜单栏查看结果和重新检查。每日检查需要 App 保持运行，通知和登录启动可在设置中选择开启。
 
-1.0 仅包含上述更新源，不含专用 MAU、清理、卸载或 UpPear 特权 Helper。
+1.1 不含清理、卸载或 UpPear 特权 Helper。新来源的行为与数据依据见 [1.1 更新来源说明](docs/UPDATES_1_1.md)。
 
 ## 构建
 
@@ -38,7 +44,7 @@ scripts/build_app.sh Release
 
 商店版本元数据可能与账号实际可更新时间不同。Homebrew 的复杂 tap/latest/HEAD 不能可靠比较时保守显示，自定义 tap 静态定义需要自行刷新。Sparkle 兼容性由官方框架决定；网络和证书失败明确显示。
 
-检查结果仅保存在本机 Application Support/UpPear/snapshot.json；版本查询会访问 Apple、Homebrew 和对应应用的更新服务器。私人交接日志、详细软件清单和本地历史包不进入公开仓库或发行包。
+检查结果仅保存在本机 Application Support/UpPear/snapshot.json；版本查询会访问 Apple、Homebrew、PopClip 官方目录和对应应用的更新服务器。PopClip 目录缓存保存在本机 Caches/UpPear/PopClip，通常一小时内复用；官网不可用时保留旧数据及时间，标为检查失败并关闭下载入口。Microsoft 检查使用本机 MAU，沿用它的频道与设置。私人交接日志、详细软件清单和本地历史包不进入公开仓库或发行包。
 
 ## 来源与许可
 

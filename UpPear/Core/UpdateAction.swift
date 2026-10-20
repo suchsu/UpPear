@@ -4,6 +4,9 @@ public enum UpdateAction: Sendable {
     case appStore(URL)
     case openApplication(URL)
     case brewUpgrade(BrewCommandPlan)
+    case microsoftAutoUpdate(URL)
+    case extensionDownload(URL)
+    case officialPage(URL)
     case manual
 
     public var title: String {
@@ -11,6 +14,9 @@ public enum UpdateAction: Sendable {
         case .appStore: "打开 App Store"
         case .openApplication: "打开应用"
         case .brewUpgrade: "通过 Homebrew 升级…"
+        case .microsoftAutoUpdate: "打开 Microsoft AutoUpdate"
+        case .extensionDownload: "下载兼容扩展"
+        case .officialPage: "查看官方详情"
         case .manual: "手动检查"
         }
     }
@@ -41,6 +47,19 @@ public enum ActionResolver {
                 }
             }
             return .appStore(URL(string: "macappstore://itunes.apple.com/WebObjects/MZStore.woa/wa/viewSoftwareUpdates")!)
+        }
+        if record.source == .popClip {
+            if record.state == .updateAvailable, let info = record.popClip, !info.isStale,
+               info.compatibleVersion == record.availableVersion, let url = info.downloadURL,
+               PopClipURLPolicy.isDownload(url) { return .extensionDownload(url) }
+            if let url = record.popClip?.detailURL, PopClipURLPolicy.isOfficial(url) { return .officialPage(url) }
+            return .officialPage(URL(string: "https://www.popclip.app/extensions/")!)
+        }
+        if record.source == .microsoftAutoUpdate {
+            if let url = record.microsoft?.updaterURL { return .microsoftAutoUpdate(url) }
+            // Ignored records can still open the updater without starting a check.
+            if let updater = MicrosoftAutoUpdateChecker.installedUpdater() { return .microsoftAutoUpdate(updater.path) }
+            return .officialPage(MicrosoftAutoUpdateChecker.supportURL)
         }
         if let app = record.app, app.feedURL != nil || app.isSetapp {
             return .openApplication(app.path)

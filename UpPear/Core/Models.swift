@@ -2,7 +2,7 @@
 import Foundation
 
 public enum UpdateSource: String, Codable, CaseIterable, Sendable {
-    case appStore, homebrewCask, homebrewFormula, sparkle, unsupported
+    case appStore, homebrewCask, homebrewFormula, sparkle, microsoftAutoUpdate, popClip, unsupported
 
     public var title: String {
         switch self {
@@ -10,13 +10,15 @@ public enum UpdateSource: String, Codable, CaseIterable, Sendable {
         case .homebrewCask: "Homebrew Cask"
         case .homebrewFormula: "Homebrew Formula"
         case .sparkle: "Sparkle"
+        case .microsoftAutoUpdate: "Microsoft AutoUpdate"
+        case .popClip: "PopClip 扩展"
         case .unsupported: "其他应用"
         }
     }
 }
 
 public enum CheckState: String, Codable, Sendable {
-    case updateAvailable, current, failed, unsupported, skipped
+    case updateAvailable, current, failed, unsupported, skipped, versionSkipped, incompatible, unverified
     public var title: String {
         switch self {
         case .updateAvailable: "有更新"
@@ -24,8 +26,15 @@ public enum CheckState: String, Codable, Sendable {
         case .failed: "检查失败"
         case .unsupported: "无法自动检查"
         case .skipped: "已忽略"
+        case .versionSkipped: "已跳过"
+        case .incompatible: "不兼容"
+        case .unverified: "版本待确认"
         }
     }
+}
+
+public enum UpdateTargetKind: String, Codable, Sendable {
+    case application, extensionBundle, package
 }
 
 public struct AppInfo: Identifiable, Hashable, Codable, Sendable {
@@ -81,6 +90,12 @@ public struct UpdateRecord: Identifiable, Codable, Sendable {
     public var brewExecutable: URL?
     public var isPinned: Bool
     public var homepage: URL?
+    // Added for UpPear 1.1. Optional fields keep 1.0 snapshots readable.
+    public var microsoft: MicrosoftUpdateInfo?
+    public var popClip: PopClipUpdateInfo?
+    public var targetKind: UpdateTargetKind {
+        source == .popClip ? .extensionBundle : (app == nil ? .package : .application)
+    }
 
     public init(app: AppInfo?, source: UpdateSource, state: CheckState, detail: String,
                 id: String? = nil, name: String? = nil, installedVersion: String? = nil,
@@ -128,12 +143,16 @@ public struct CheckOptions: Sendable {
 }
 
 public struct ScanSnapshot: Codable, Sendable {
+    // Refresh inventories made before PKG casks were associated with bundles.
+    public static let currentSchemaVersion = 3
+    public let schemaVersion: Int?
     public let completedAt: Date
     public let records: [UpdateRecord]
     public let warnings: [String]
     public var updateCount: Int { records.filter { $0.state == .updateAvailable }.count }
     public var failureCount: Int { records.filter { $0.state == .failed }.count }
     public init(completedAt: Date = Date(), records: [UpdateRecord], warnings: [String] = []) {
+        self.schemaVersion = Self.currentSchemaVersion
         self.completedAt = completedAt
         self.records = records
         self.warnings = warnings
