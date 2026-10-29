@@ -5,7 +5,7 @@ import SwiftUI
 // clears list selection by clicking unused space.
 
 enum AppFilter: String, CaseIterable, Identifiable {
-    case updates, all, failed, unsupported, ignored, appStore, homebrew, sparkle, microsoft, popClip
+    case updates, all, failed, unsupported, ignored, appStore, homebrew, sparkle, microsoft, popClip, github, electron, steam
     var id: String { rawValue }
     var title: String {
         switch self {
@@ -19,6 +19,9 @@ enum AppFilter: String, CaseIterable, Identifiable {
         case .sparkle: "Sparkle"
         case .microsoft: "Microsoft"
         case .popClip: "PopClip 扩展"
+        case .github: "GitHub Releases"
+        case .electron: "Electron"
+        case .steam: "Steam"
         }
     }
     var symbol: String {
@@ -33,6 +36,9 @@ enum AppFilter: String, CaseIterable, Identifiable {
         case .sparkle: "sparkles"
         case .microsoft: "square.grid.2x2"
         case .popClip: "puzzlepiece.extension"
+        case .github: "chevron.left.forwardslash.chevron.right"
+        case .electron: "atom"
+        case .steam: "gamecontroller"
         }
     }
     func includes(_ record: UpdateRecord) -> Bool {
@@ -40,13 +46,16 @@ enum AppFilter: String, CaseIterable, Identifiable {
         case .updates: record.state == .updateAvailable
         case .all: true
         case .failed: record.state == .failed
-        case .unsupported: [.unsupported, .unverified, .incompatible].contains(record.state)
+        case .unsupported: [.unsupported, .unverified, .incompatible, .managed].contains(record.state)
         case .ignored: [.skipped, .versionSkipped].contains(record.state)
         case .appStore: record.source == .appStore
         case .homebrew: [.homebrewCask, .homebrewFormula].contains(record.source)
         case .sparkle: record.source == .sparkle
         case .microsoft: record.source == .microsoftAutoUpdate
         case .popClip: record.source == .popClip
+        case .github: record.source == .github
+        case .electron: record.source == .electron
+        case .steam: record.source == .steam
         }
     }
 }
@@ -64,6 +73,14 @@ struct MainWindow: View {
     @State private var showOutput = false
     @State private var managedSection: ManagedUpdateSection = .ignored
 
+    private var installedSourceFilters: [AppFilter] {
+        Array(AppFilter.allCases.dropFirst(5)).filter { item in
+            model.records.contains {
+                item.includes($0) && ($0.source != .steam || $0.steam?.installationConfirmed == true)
+            }
+        }
+    }
+
     private var visibleRecords: [UpdateRecord] {
         let candidates: [UpdateRecord]
         if filter == .ignored {
@@ -78,7 +95,11 @@ struct MainWindow: View {
             return $0.name.localizedStandardCompare($1.name) == .orderedAscending
         }
     }
-    private var selectedRecord: UpdateRecord? { visibleRecords.first(where: { $0.id == selection }) }
+    private var selectedRecord: UpdateRecord? {
+        // Local ignore/skip actions may remove a row from the active filter;
+        // keep its detail visible so the user can restore or finish the action.
+        (model.records + model.skippedRecords).first(where: { $0.id == selection })
+    }
 
     var body: some View {
         NavigationSplitView {
@@ -86,8 +107,10 @@ struct MainWindow: View {
                 Section("软件") {
                     ForEach(Array(AppFilter.allCases.prefix(5))) { item in sidebarRow(item) }
                 }
-                Section("更新来源") {
-                    ForEach(Array(AppFilter.allCases.dropFirst(5))) { item in sidebarRow(item) }
+                if !installedSourceFilters.isEmpty {
+                    Section("更新来源") {
+                        ForEach(installedSourceFilters) { item in sidebarRow(item) }
+                    }
                 }
             }
             .navigationSplitViewColumnWidth(min: 175, ideal: 190, max: 240)
@@ -106,9 +129,6 @@ struct MainWindow: View {
                                 Text("已忽略 (\(model.ignoredCount))").tag(ManagedUpdateSection.ignored)
                                 Text("已跳过 (\(model.skippedVersions.count))").tag(ManagedUpdateSection.skipped)
                             }.pickerStyle(.segmented).padding(12)
-                            Text(managedSection == .ignored ? "停止自动检查此项目，直到手动恢复。" : "仅跳过指定版本；后续新版会自动恢复提醒。")
-                                .font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 14).padding(.bottom, 8)
                         }
                         if visibleRecords.isEmpty { emptyState }
                         else {
@@ -126,7 +146,7 @@ struct MainWindow: View {
                         if let selectedRecord {
                             RecordDetail(record: selectedRecord, model: model)
                         } else {
-                            ContentUnavailableView("选择一个项目", systemImage: "sidebar.right", description: Text("查看版本、更新来源和官方更新入口。"))
+                            ContentUnavailableView("选择一个项目", systemImage: "sidebar.right")
                         }
                     }.frame(minWidth: 280, idealWidth: 310, maxWidth: 420, maxHeight: .infinity)
                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -157,9 +177,21 @@ struct MainWindow: View {
         }
         .onChange(of: filter) { _, value in
             if value == .ignored, model.ignoredCount == 0, !model.skippedVersions.isEmpty { managedSection = .skipped }
-            selection = visibleRecords.first?.id
+            if !visibleRecords.contains(where: { $0.id == selection }) { selection = visibleRecords.first?.id }
         }
-        .onChange(of: visibleRecords.map(\.id)) { _, _ in
+        .onChange(of: visibleRecords.map(\.id)) { previous, current in
+            if let selection, selectedRecord == nil {
+                let index = previous.firstIndex(of: selection) ?? 0
+                self.selection = current.isEmpty ? nil : current[min(index, current.count - 1)]
+            }
+        }
+        .onChange(of: installedSourceFilters) { _, values in
+            if let filter, Array(AppFilter.allCases.dropFirst(5)).contains(filter), !values.contains(filter) {
+                self.filter = .all
+            }
+        }
+        .onChange(of: managedSection) { _, _ in selection = visibleRecords.first?.id }
+        .onChange(of: search) { _, _ in
             if !visibleRecords.contains(where: { $0.id == selection }) { selection = visibleRecords.first?.id }
         }
         .onAppear { selection = visibleRecords.first?.id }
@@ -194,7 +226,7 @@ struct MainWindow: View {
                     if model.progress.total > 0 { ProgressView(value: Double(model.progress.completed), total: Double(model.progress.total)).frame(width: 250) }
                 } else if let snapshot = model.snapshot {
                     HStack(spacing: 4) { Text("上次完成检查"); Text(snapshot.completedAt, style: .relative); Text("前") }.font(.caption).foregroundStyle(.secondary)
-                } else { Text("检查软件、Microsoft 和 PopClip 扩展更新。").font(.callout).foregroundStyle(.secondary) }
+                }
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 6) {
@@ -221,7 +253,7 @@ struct MainWindow: View {
                         Text("已跳过 \(skipped.displayVersion)").font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                     if record.state != .versionSkipped {
-                        Text(record.state.title).font(.caption).foregroundStyle([.failed, .incompatible].contains(record.state) ? .orange : .secondary)
+                        Text(record.statusTitle).font(.caption).foregroundStyle([.failed, .incompatible].contains(record.state) ? .orange : .secondary)
                     }
                 }
             }
@@ -229,11 +261,14 @@ struct MainWindow: View {
     }
 
     private var emptyState: some View {
-        ContentUnavailableView(model.isChecking ? "正在检查" : (filter == .updates ? "没有确认的待更新项目" : "没有匹配的项目"),
-            systemImage: model.isChecking ? "arrow.triangle.2.circlepath" : "checkmark.circle",
-            description: Text(filter == .ignored
-                ? (managedSection == .ignored ? "在项目详情中选择“忽略此项目”，可在这里恢复。" : "在更新详情中选择“跳过此更新”，可在这里恢复提醒。")
-                : (model.snapshot == nil ? "点击“检查更新”开始扫描。" : "查询失败和无法自动检测的应用，可在左侧分别查看。")))
+        ContentUnavailableView {
+            Label(model.isChecking ? "正在检查" : (filter == .updates ? "没有可用更新" : "没有匹配的项目"),
+                systemImage: model.isChecking ? "arrow.triangle.2.circlepath" : "checkmark.circle")
+        } actions: {
+            if model.snapshot == nil, !model.isChecking {
+                Button("检查更新") { model.checkNow() }.buttonStyle(.borderedProminent)
+            }
+        }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

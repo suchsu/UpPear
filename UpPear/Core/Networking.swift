@@ -4,16 +4,31 @@ protocol HTTPClient: Sendable {
     func fetch(_ request: URLRequest) async throws -> Data
 }
 
-struct NetworkClient: HTTPClient {
+struct HTTPPayload: Sendable {
+    let data: Data
+    let status: Int
+    let headers: [String: String]
+}
+
+protocol HTTPResponseClient: HTTPClient {
+    func response(_ request: URLRequest) async throws -> HTTPPayload
+}
+
+struct NetworkClient: HTTPResponseClient {
     func fetch(_ request: URLRequest) async throws -> Data {
+        let payload = try await response(request)
+        guard (200..<300).contains(payload.status) else { throw CheckError.httpStatus(payload.status) }
+        return payload.data
+    }
+
+    func response(_ request: URLRequest) async throws -> HTTPPayload {
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let response = response as? HTTPURLResponse else {
+        guard let response = response as? HTTPURLResponse, data.count <= 10_000_000 else {
             throw CheckError.invalidResponse
         }
-        guard (200..<300).contains(response.statusCode) else {
-            throw CheckError.httpStatus(response.statusCode)
-        }
-        return data
+        var headers: [String: String] = [:]
+        for (key, value) in response.allHeaderFields { headers[String(describing: key).lowercased()] = String(describing: value) }
+        return HTTPPayload(data: data, status: response.statusCode, headers: headers)
     }
 }
 

@@ -87,7 +87,11 @@ enum HomebrewUpdateChecker {
         var paths: Set<String> = []
         var bundleIDs: Set<String> = []
         for artifact in artifacts {
-            for rawPath in artifact["app"] as? [String] ?? [] {
+            // Homebrew may mix an app string with {"target": "Renamed.app"}.
+            // Casting the entire array to [String] discards valid ownership.
+            let entries = artifact["app"] as? [Any] ?? []
+            for rawPath in entries.compactMap({ $0 as? String }) {
+                guard !rawPath.components(separatedBy: "/").contains("..") else { continue }
                 let path: URL
                 if rawPath.hasPrefix("/") { path = URL(fileURLWithPath: rawPath) }
                 else {

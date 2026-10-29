@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var model: UpdateModel
+    @Bindable var selfUpdater: SelfUpdater
     @State private var license: String?
     var body: some View {
         Form {
@@ -9,20 +10,31 @@ struct SettingsView: View {
                 Picker("App Store 优先地区", selection: $model.primaryRegion) {
                     ForEach([("CN", "中国大陆"), ("US", "美国"), ("HK", "中国香港"), ("JP", "日本"), ("KR", "韩国"), ("SG", "新加坡"), ("GB", "英国"), ("DE", "德国")], id: \.0) { code, title in Text(title).tag(code) }
                 }
-                Text("未在优先地区找到应用时，会查询其他地区。此设置不会更改商店账号地区。").font(.caption).foregroundStyle(.secondary)
                 Toggle("包括 Homebrew 命令行软件包", isOn: $model.includeFormulae)
                 Toggle("包括 Sparkle 预发布版本", isOn: $model.includePreReleases)
-                Text("Microsoft 软件通过官方 AutoUpdate 检查；PopClip 扩展单独检查，并核实当前 PopClip 与 macOS 的兼容性。可在项目详情中分别忽略。").font(.caption).foregroundStyle(.secondary)
                 Toggle("每天自动检查一次", isOn: $model.dailyCheck)
-                Text("UpPear 运行时自动检查；Mac 睡眠或应用退出期间不会检查。").font(.caption).foregroundStyle(.secondary)
                 Button("按当前设置重新检查") { model.checkNow() }.disabled(model.isChecking || model.isUpgrading)
             }
             Section("系统") {
                 Toggle("发现新的更新时通知", isOn: Binding(get: { model.notifyNewUpdates }, set: model.setNotifications))
                 Toggle("登录时启动", isOn: Binding(get: { model.loginEnabled }, set: model.setLoginEnabled))
-                Text("登录启动建议在将 UpPear 放入“应用程序”后启用。").font(.caption).foregroundStyle(.secondary)
             }
-            Section("关于 UpPear \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.1.0")") {
+            Section("UpPear 自身更新") {
+                Toggle("自动检查 UpPear 更新", isOn: Binding(
+                    get: { selfUpdater.automaticallyChecksForUpdates },
+                    set: selfUpdater.setAutomaticallyChecksForUpdates))
+                if let date = selfUpdater.lastUpdateCheckDate {
+                    Text("上次检查：\(date.formatted(date: .abbreviated, time: .shortened))")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                if selfUpdater.isWaitingToRestart {
+                    Label("等待当前升级完成后重启", systemImage: "pause.circle")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Button("检查 UpPear 更新…") { selfUpdater.checkForUpdates() }
+                    .disabled(!selfUpdater.canCheckForUpdates || model.isUpgrading)
+            }
+            Section("关于 UpPear \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.2.0")") {
                 Text("作者：suchsu")
                 Text("基于 Pearcleaner 5.4.3 的更新代码开发。原作者：Alin Lupascu / alienator88。UpPear 是独立的社区衍生项目。")
                 Link("Pearcleaner 原项目", destination: URL(string: "https://github.com/alienator88/Pearcleaner")!)

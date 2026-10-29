@@ -2,7 +2,7 @@
 import Foundation
 
 public enum UpdateSource: String, Codable, CaseIterable, Sendable {
-    case appStore, homebrewCask, homebrewFormula, sparkle, microsoftAutoUpdate, popClip, unsupported
+    case appStore, homebrewCask, homebrewFormula, sparkle, microsoftAutoUpdate, popClip, github, electron, steam, unsupported
 
     public var title: String {
         switch self {
@@ -12,13 +12,16 @@ public enum UpdateSource: String, Codable, CaseIterable, Sendable {
         case .sparkle: "Sparkle"
         case .microsoftAutoUpdate: "Microsoft AutoUpdate"
         case .popClip: "PopClip 扩展"
+        case .github: "GitHub Releases"
+        case .electron: "Electron 更新源"
+        case .steam: "Steam"
         case .unsupported: "其他应用"
         }
     }
 }
 
 public enum CheckState: String, Codable, Sendable {
-    case updateAvailable, current, failed, unsupported, skipped, versionSkipped, incompatible, unverified
+    case updateAvailable, current, failed, unsupported, skipped, versionSkipped, incompatible, unverified, managed
     public var title: String {
         switch self {
         case .updateAvailable: "有更新"
@@ -29,6 +32,7 @@ public enum CheckState: String, Codable, Sendable {
         case .versionSkipped: "已跳过"
         case .incompatible: "不兼容"
         case .unverified: "版本待确认"
+        case .managed: "由来源管理"
         }
     }
 }
@@ -50,6 +54,8 @@ public struct AppInfo: Identifiable, Hashable, Codable, Sendable {
     public let adamID: UInt64?
     public let feedURL: URL?
     public let isSetapp: Bool
+    public var installationFileID: String?
+    public var teamIdentifier: String?
 
     public init(path: URL, bundlePath: URL? = nil, bundleIdentifier: String,
                 appName: String, appVersion: String, appBuildNumber: String? = nil,
@@ -93,6 +99,19 @@ public struct UpdateRecord: Identifiable, Codable, Sendable {
     // Added for UpPear 1.1. Optional fields keep 1.0 snapshots readable.
     public var microsoft: MicrosoftUpdateInfo?
     public var popClip: PopClipUpdateInfo?
+    public var github: GitHubUpdateInfo?
+    public var electron: ElectronUpdateInfo?
+    public var steam: SteamUpdateInfo?
+    public var appStoreMac: AppStoreMacAvailability?
+    public var statusTitle: String {
+        if state == .managed { return "由 \(source.title) 管理" }
+        if state == .unverified, source == .steam, steam?.installationConfirmed == false { return "未确认安装" }
+        if source == .appStore, app?.wrapped == true {
+            if state == .incompatible, appStoreMac?.status == .unavailable { return "Mac 不可安装" }
+            if state == .unverified { return "兼容性待确认" }
+        }
+        return state.title
+    }
     public var targetKind: UpdateTargetKind {
         source == .popClip ? .extensionBundle : (app == nil ? .package : .application)
     }
@@ -133,6 +152,7 @@ public struct CheckOptions: Sendable {
     public var includePreReleases: Bool
     public var includeFormulae: Bool
     public var ignoredIDs: Set<String>
+    public var githubBindings: [GitHubSourceBinding] = []
     public init(primaryRegion: String = "CN", includePreReleases: Bool = false,
                 includeFormulae: Bool = true, ignoredIDs: Set<String> = []) {
         self.primaryRegion = primaryRegion
@@ -144,10 +164,10 @@ public struct CheckOptions: Sendable {
 
 public struct ScanSnapshot: Codable, Sendable {
     // Refresh inventories made before PKG casks were associated with bundles.
-    public static let currentSchemaVersion = 3
+    public static let currentSchemaVersion = 4
     public let schemaVersion: Int?
     public let completedAt: Date
-    public let records: [UpdateRecord]
+    public var records: [UpdateRecord]
     public let warnings: [String]
     public var updateCount: Int { records.filter { $0.state == .updateAvailable }.count }
     public var failureCount: Int { records.filter { $0.state == .failed }.count }

@@ -37,7 +37,7 @@ public enum AppScanner {
                     let canonical = path.resolvingSymlinksInPath().standardizedFileURL.path
                     guard seen.insert(canonical).inserted else { continue }
                     if let app = getAppInfo(atPath: path) {
-                        if app.bundleIdentifier != "org.uppear.UpPear" { apps.append(app) }
+                        if app.bundleIdentifier != "org.uppear.UpPear" { apps.append(SourceDiscovery.identify(app)) }
                     } else {
                         warnings.append("无法读取应用信息：\(path.lastPathComponent)")
                         // A missing Info.plist must not silently remove a known

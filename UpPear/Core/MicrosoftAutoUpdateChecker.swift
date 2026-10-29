@@ -30,7 +30,7 @@ public enum MicrosoftAutoUpdateChecker {
     public static let supportURL = URL(string:
         "https://support.microsoft.com/en-us/office/lifecycle/officeinstall/update-office-for-mac-automatically")!
 
-    // Documented MAU products. Edge and Teams own their update mechanisms.
+    // Documented MAU products, supplemented by actual registered app paths.
     // The actual registration/path is still required before calling an app current.
     static let applicationIDs: [String: String] = [
         "com.microsoft.Excel": "XCEL2019", "com.microsoft.Word": "MSWD2019",
@@ -40,11 +40,24 @@ public enum MicrosoftAutoUpdateChecker {
         "com.microsoft.defender": "WDAVCONSUMER", "com.microsoft.rdc.macos": "MSRD10",
         "com.microsoft.autoupdate2": "MSau04", "com.microsoft.Copilot": "MSCP10",
         "com.microsoft.SkypeForBusiness": "MSFB16", "com.microsoft.remotehelp": "MSRH01",
-        "com.microsoft.quickassist": "MSQA01"
+        "com.microsoft.quickassist": "MSQA01", "com.microsoft.teams2": "TEAMS21"
     ]
 
     public static func isCandidate(_ app: AppInfo) -> Bool {
         !app.isAppStore && !app.isSetapp && applicationID(for: app) != nil
+    }
+    static func isCandidate(_ app: AppInfo, configuration: MicrosoftConfiguration?) -> Bool {
+        guard !app.isAppStore, !app.isSetapp, app.path.pathExtension == "app" else { return false }
+        return isCandidate(app) || configuration?.registrations.contains {
+            $0.path.resolvingSymlinksInPath().standardizedFileURL == app.path.resolvingSymlinksInPath().standardizedFileURL
+        } == true
+    }
+
+    static func readConfiguration(updater: AppInfo?) async -> MicrosoftConfiguration? {
+        guard let updater, let result = try? await CommandRunner.run(
+            executable: updater.path.appendingPathComponent("Contents/MacOS/msupdate"),
+            arguments: ["--config", "--format", "plist"], timeout: 30), result.exitCode == 0 else { return nil }
+        return try? parseConfiguration(result.output)
     }
     static func applicationID(for app: AppInfo) -> String? {
         applicationIDs.first { $0.key.caseInsensitiveCompare(app.bundleIdentifier) == .orderedSame }?.value
@@ -56,9 +69,9 @@ public enum MicrosoftAutoUpdateChecker {
             .first { $0.bundleIdentifier == "com.microsoft.autoupdate2" }
     }
 
-    static func check(apps: [AppInfo], updater: AppInfo?,
+    static func check(apps: [AppInfo], updater: AppInfo?, configuration: MicrosoftConfiguration? = nil,
         run: (@Sendable ([String]) async throws -> CommandResult)? = nil) async -> [UpdateRecord] {
-        let candidates = apps.filter(isCandidate)
+        let candidates = apps.filter { isCandidate($0, configuration: configuration) }
         guard !candidates.isEmpty else { return [] }
         func record(_ app: AppInfo, _ state: CheckState, _ detail: String,
                     id: String? = nil, version: String? = nil, channel: String? = nil) -> UpdateRecord {
@@ -76,12 +89,16 @@ public enum MicrosoftAutoUpdateChecker {
                 arguments: arguments, timeout: 90, environmentOverrides: ["LC_ALL": "en_US.UTF-8", "LANG": "en_US.UTF-8"])
         }
         do {
-            let configResult = try await execute(["--config", "--format", "plist"])
-            guard configResult.exitCode == 0 else { throw CheckError.invalidResponse }
-            let config = try parseConfiguration(configResult.output)
+            let config: MicrosoftConfiguration
+            if let configuration { config = configuration }
+            else {
+                let configResult = try await execute(["--config", "--format", "plist"])
+                guard configResult.exitCode == 0 else { throw CheckError.invalidResponse }
+                config = try parseConfiguration(configResult.output)
+            }
             try Task.checkCancellation()
             let list = try await execute(["--list", "--format", "plist"])
-            let updates = try parseUpdates(list)
+            let updates = try parseUpdates(list, registeredIDs: Set(config.registrations.map(\.applicationID)))
             try Task.checkCancellation()
             return candidates.map { app in
                 let path = app.path.resolvingSymlinksInPath().standardizedFileURL
@@ -123,7 +140,7 @@ public enum MicrosoftAutoUpdateChecker {
         return MicrosoftConfiguration(registrations: registrations, channel: root["ChannelName"] as? String)
     }
 
-    static func parseUpdates(_ result: CommandResult) throws -> [MicrosoftAvailableUpdate] {
+    static func parseUpdates(_ result: CommandResult, registeredIDs: Set<String> = []) throws -> [MicrosoftAvailableUpdate] {
         guard result.exitCode == 0 else { throw CheckError.invalidResponse }
         let text = stripTerminalCodes(result.output)
         let combined = (text + "\n" + result.error).lowercased()
@@ -147,7 +164,7 @@ public enum MicrosoftAutoUpdateChecker {
             if let array = root["Updates"] as? [[String: Any]] { items = array }
             else {
                 let values = (root["Updates"] as? [String: Any]) ?? root
-                let known = Set(applicationIDs.values.map { $0.uppercased() })
+                let known = Set(applicationIDs.values.map { $0.uppercased() }).union(registeredIDs.map { $0.uppercased() })
                 guard !values.isEmpty, values.keys.allSatisfy({ known.contains($0.uppercased()) }) else {
                     throw CheckError.invalidResponse
                 }

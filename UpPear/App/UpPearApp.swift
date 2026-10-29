@@ -6,12 +6,15 @@ import SwiftUI
 struct UpPearApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @State private var model = UpdateModel()
+    @State private var selfUpdater = SelfUpdater()
 
     var body: some Scene {
         Window("UpPear", id: "main") {
             MainWindow(model: model)
                 .frame(minWidth: 940, minHeight: 600)
                 .task {
+                    delegate.isUpgradeInProgress = { model.isUpgrading }
+                    selfUpdater.start(isUpgradeInProgress: { model.isUpgrading })
                     model.start()
                 }
         }
@@ -19,6 +22,10 @@ struct UpPearApp: App {
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button("关于 UpPear") { delegate.showAbout() }
+            }
+            CommandGroup(after: .appInfo) {
+                Button("检查 UpPear 更新…") { selfUpdater.checkForUpdates() }
+                    .disabled(!selfUpdater.canCheckForUpdates || model.isUpgrading)
             }
             CommandGroup(after: .newItem) {
                 Button("检查软件更新") { model.checkNow() }
@@ -31,20 +38,24 @@ struct UpPearApp: App {
             }
         }
         MenuBarExtra {
-            MenuBarView(model: model)
+            MenuBarView(model: model, selfUpdater: selfUpdater)
         } label: {
             Label(model.updateCount > 0 ? "\(model.updateCount)" : "UpPear", systemImage: "arrow.up.circle")
                 .accessibilityIdentifier("uppear-status-item")
                 .accessibilityLabel("UpPear，\(model.updateCount) 个可用更新")
         }
-        Settings { SettingsView(model: model) }
+        Settings { SettingsView(model: model, selfUpdater: selfUpdater) }
     }
 
 }
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    var isUpgradeInProgress: @MainActor () -> Bool = { false }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        isUpgradeInProgress() ? .terminateCancel : .terminateNow
+    }
     func showAbout() {
         NSApplication.shared.orderFrontStandardAboutPanel(options: [
             .applicationName: "UpPear",

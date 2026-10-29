@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     @Bindable var model: UpdateModel
+    @Bindable var selfUpdater: SelfUpdater
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -20,6 +21,8 @@ struct MenuBarView: View {
         if model.isChecking { Button("取消检查") { model.cancelCheck() } }
         Button("打开 UpPear") { openWindow(id: "main"); NSApplication.shared.activate() }
         SettingsLink { Text("设置…") }
+        Button("检查 UpPear 更新…") { selfUpdater.checkForUpdates() }
+            .disabled(!selfUpdater.canCheckForUpdates || model.isUpgrading)
         Divider()
         Button("退出 UpPear") { NSApplication.shared.terminate(nil) }.disabled(model.isUpgrading)
     }

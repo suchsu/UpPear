@@ -4,6 +4,7 @@ import SwiftUI
 struct RecordDetail: View {
     let record: UpdateRecord
     @Bindable var model: UpdateModel
+    @State private var showGitHubSource = false
 
     var body: some View {
         ScrollView {
@@ -11,7 +12,7 @@ struct RecordDetail: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Image(nsImage: model.icon(for: record)).resizable().scaledToFit().frame(width: 64, height: 64)
                     Text(record.name).font(.title2.bold()).textSelection(.enabled)
-                    Label(record.state.title, systemImage: record.state == .updateAvailable ? "arrow.up.circle" : "info.circle")
+                    Label(record.statusTitle, systemImage: record.state == .updateAvailable ? "arrow.up.circle" : "info.circle")
                         .font(.callout).foregroundStyle(record.state == .failed ? .orange : .secondary)
                 }
                 Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 12) {
@@ -24,6 +25,26 @@ struct RecordDetail: View {
                     if let info = record.microsoft {
                         GridRow { Text("微软标识符").foregroundStyle(.secondary); Text(info.applicationID) }
                         if let channel = info.channel { GridRow { Text("更新频道").foregroundStyle(.secondary); Text(channel) } }
+                    }
+                    if let info = record.github {
+                        GridRow { Text("GitHub 仓库").foregroundStyle(.secondary); Text(info.binding.repository.slug) }
+                        GridRow { Text("发布流").foregroundStyle(.secondary); Text(info.binding.stream.title) }
+                        if let manifest = info.binding.requiredManifestAsset {
+                            GridRow { Text("更新频道").foregroundStyle(.secondary); Text(manifest.replacingOccurrences(of: "-mac.yml", with: "")) }
+                        }
+                        if !info.binding.branch.isEmpty { GridRow { Text("分支").foregroundStyle(.secondary); Text(info.binding.branch) } }
+                        if let tag = info.releaseTag { GridRow { Text("版本标签").foregroundStyle(.secondary); Text(tag) } }
+                        if let name = info.assetName { GridRow { Text("安装产物").foregroundStyle(.secondary); Text(name) } }
+                    }
+                    if let info = record.electron {
+                        GridRow { Text("更新频道").foregroundStyle(.secondary); Text(info.channel) }
+                        GridRow { Text("适用 Mac").foregroundStyle(.secondary); Text(info.architecture == "arm64" ? "Apple Silicon" : "Intel") }
+                    }
+                    if let info = record.steam {
+                        if let id = info.appID { GridRow { Text("Steam App ID").foregroundStyle(.secondary); Text(id) } }
+                        if let branch = info.branch { GridRow { Text("本地分支").foregroundStyle(.secondary); Text(branch) } }
+                        GridRow { Text("安装证据").foregroundStyle(.secondary); Text(info.installationConfirmed ? "已核实" : "仅启动入口或待核实") }
+                        if let date = info.manifestModifiedAt { GridRow { Text("本地记录时间").foregroundStyle(.secondary); Text(date, format: .dateTime.year().month().day().hour().minute()) } }
                     }
                     if let info = record.popClip {
                         GridRow { Text("扩展标识符").foregroundStyle(.secondary); Text(info.identifier ?? "未知") }
@@ -44,7 +65,9 @@ struct RecordDetail: View {
                 if let info = record.popClip, let compatibility = info.compatibility {
                     Text(compatibility).font(.callout).foregroundStyle(record.state == .incompatible || info.isStale ? .orange : .secondary)
                 }
-                Text(record.detail).font(.callout).foregroundStyle(.secondary).textSelection(.enabled)
+                if [.failed, .unsupported, .unverified, .incompatible].contains(record.state), !record.detail.isEmpty {
+                    Text(record.detail).font(.callout).foregroundStyle(record.state == .failed || record.state == .incompatible ? .orange : .secondary).textSelection(.enabled)
+                }
                 VStack(alignment: .leading, spacing: 10) {
                     if record.state != .versionSkipped {
                         Button(ActionResolver.action(for: record, primaryRegion: model.primaryRegion).title) { model.performAction(record) }
@@ -52,7 +75,7 @@ struct RecordDetail: View {
                             .accessibilityIdentifier("record-action")
                     }
                     if let skipped = model.skippedVersions[record.id] {
-                        Text("已跳过 \(skipped.displayVersion)，后续新版会自动恢复提醒。")
+                        Label("已跳过 \(skipped.displayVersion)", systemImage: "forward.end")
                             .font(.caption).foregroundStyle(.secondary)
                         Button("恢复此更新") { model.restoreSkippedUpdate(record) }
                             .buttonStyle(.bordered).disabled(model.isChecking || model.isUpgrading)
@@ -65,12 +88,16 @@ struct RecordDetail: View {
                     Button(model.ignoredIDs.contains(record.id) ? "恢复自动检查" : "忽略此项目") { model.toggleIgnored(record) }
                         .buttonStyle(.borderless).disabled(model.isChecking || model.isUpgrading)
                     if let app = record.app {
+                        if !app.isAppStore, !app.isSetapp, [.unsupported, .github, .electron].contains(record.source) {
+                            Button(record.github == nil ? "指定 GitHub 来源…" : "修改 GitHub 来源…") { showGitHubSource = true }
+                                .buttonStyle(.bordered).disabled(model.isChecking || model.isUpgrading)
+                                .accessibilityIdentifier("github-edit-source")
+                        }
                         Button("在 Finder 中显示") { NSWorkspace.shared.activateFileViewerSelecting([app.path]) }.buttonStyle(.borderless)
                     }
                     if let info = record.popClip {
                         Button("在 Finder 中显示扩展") { NSWorkspace.shared.activateFileViewerSelecting([info.packageURL]) }.buttonStyle(.borderless)
                         Button("安装后重新检查") { model.checkNow() }.buttonStyle(.borderless).disabled(model.isChecking || model.isUpgrading)
-                        Text("下载后打开扩展包，由 PopClip 确认安装。").font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 if let notes = record.releaseNotes, !notes.isEmpty {
@@ -82,10 +109,12 @@ struct RecordDetail: View {
                     Link(record.source == .popClip ? "官方详情与历史版本" : "查看完整更新说明", destination: url)
                 }
                 if let url = record.homepage, url != record.releaseNotesURL, ["https", "http"].contains(url.scheme) { Link("开发者网站", destination: url) }
+                if let info = record.appStoreMac { Link("查看商店兼容性", destination: info.pageURL) }
                 if let app = record.app { Text(app.path.path).font(.caption).foregroundStyle(.tertiary).textSelection(.enabled) }
                 if let info = record.popClip { Text(info.packageURL.path).font(.caption).foregroundStyle(.tertiary).textSelection(.enabled) }
             }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
         }
+        .sheet(isPresented: $showGitHubSource) { GitHubSourceSheet(record: record, model: model) }
     }
 
     private static func plainNotes(_ string: String) -> String {
@@ -110,7 +139,6 @@ struct UpgradeConfirmation: View {
                 Text(plan.displayCommand).font(.system(.callout, design: .monospaced)).textSelection(.enabled)
                     .padding(14).frame(maxWidth: .infinity, alignment: .leading).background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
             }
-            Text("如果安装程序需要管理员验证，可复制命令到终端运行。").font(.callout).foregroundStyle(.secondary)
             HStack {
                 Button("复制命令") { model.copyCommand(record) }
                 Spacer()

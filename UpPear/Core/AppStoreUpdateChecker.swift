@@ -36,9 +36,29 @@ enum AppStoreUpdateChecker {
             let hasUpdate = availableVer > installedVer
             var detail = hasUpdate ? "请通过 App Store 完成更新。" : "商店元数据未显示更高版本。"
             if foundRegion != region { detail += " 版本信息来自 \(foundRegion)，实际更新取决于你的商店账号地区。" }
-            return UpdateRecord(app: app, source: .appStore, state: hasUpdate ? .updateAvailable : .current,
+            var record = UpdateRecord(app: app, source: .appStore, state: hasUpdate ? .updateAvailable : .current,
                 detail: detail, availableVersion: info.version, releaseNotes: info.releaseNotes,
                 releaseDate: info.releaseDate, foundInRegion: foundRegion, adamID: info.adamID)
+            if app.wrapped {
+                do {
+                    let availability = try await AppStoreMacChecker.check(bundleID: app.bundleIdentifier,
+                        adamID: info.adamID, region: foundRegion, client: client)
+                    record.appStoreMac = availability
+                    switch availability.status {
+                    case .unavailable:
+                        record.state = .incompatible
+                        record.detail = "此 iPhone/iPad 应用当前不向 Mac 提供安装。"
+                    case .unknown:
+                        record.state = .unverified
+                        record.detail = "Mac 可安装性待核实。"
+                    case .available: break
+                    }
+                } catch {
+                    record.state = .unverified
+                    record.detail = "无法核实 Mac 可安装性：\(error.localizedDescription)"
+                }
+            }
+            return record
         } catch {
             return UpdateRecord(app: app, source: .appStore, state: .failed, detail: error.localizedDescription)
         }

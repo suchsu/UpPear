@@ -7,6 +7,7 @@ public enum UpdateAction: Sendable {
     case microsoftAutoUpdate(URL)
     case extensionDownload(URL)
     case officialPage(URL)
+    case steam(URL)
     case manual
 
     public var title: String {
@@ -17,6 +18,7 @@ public enum UpdateAction: Sendable {
         case .microsoftAutoUpdate: "打开 Microsoft AutoUpdate"
         case .extensionDownload: "下载兼容扩展"
         case .officialPage: "查看官方详情"
+        case .steam: "在 Steam 中检查"
         case .manual: "手动检查"
         }
     }
@@ -39,6 +41,8 @@ public enum ActionResolver {
     public static func action(for record: UpdateRecord, primaryRegion: String = "CN") -> UpdateAction {
         // Source identity outranks detections and any stale Homebrew metadata.
         if record.app?.isAppStore == true || record.source == .appStore {
+            if record.app?.wrapped == true, record.state != .updateAvailable && record.state != .current,
+               let app = record.app { return .openApplication(app.path) }
             if let id = record.adamID {
                 let region = (record.foundInRegion ?? primaryRegion).lowercased()
                 if region.range(of: "^[a-z]{2}$", options: .regularExpression) != nil,
@@ -48,6 +52,18 @@ public enum ActionResolver {
             }
             return .appStore(URL(string: "macappstore://itunes.apple.com/WebObjects/MZStore.woa/wa/viewSoftwareUpdates")!)
         }
+        if record.source == .steam {
+            if let id = record.steam?.appID, id.range(of: #"^[1-9][0-9]{0,11}$"#, options: .regularExpression) != nil {
+                return .steam(URL(string: "steam://nav/games/details/\(id)")!)
+            }
+            return .steam(URL(string: "steam://nav/downloads")!)
+        }
+        if record.source == .github, let info = record.github {
+            // The first release uses a reviewable official page, not automatic
+            // installation of an unverified binary selected by its filename.
+            return .officialPage(record.releaseNotesURL ?? info.binding.repository.url.appendingPathComponent("releases"))
+        }
+        if record.source == .electron, let app = record.app { return .openApplication(app.path) }
         if record.source == .popClip {
             if record.state == .updateAvailable, let info = record.popClip, !info.isStale,
                info.compatibleVersion == record.availableVersion, let url = info.downloadURL,

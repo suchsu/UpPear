@@ -35,6 +35,15 @@
 		C10000000000000000000214 /* PopClipDirectoryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000114 /* PopClipDirectoryClient.swift */; };
 		C10000000000000000000215 /* PopClipUpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000115 /* PopClipUpdateChecker.swift */; };
 		C10000000000000000000216 /* SkippedUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000116 /* SkippedUpdate.swift */; };
+		C10000000000000000000217 /* SelfUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000117 /* SelfUpdater.swift */; };
+		D12000000000000000000201 /* SourceBinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000101 /* SourceBinding.swift */; };
+		D12000000000000000000202 /* UpdateManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000102 /* UpdateManifest.swift */; };
+		D12000000000000000000203 /* SourceDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000103 /* SourceDiscovery.swift */; };
+		D12000000000000000000204 /* ElectronUpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000104 /* ElectronUpdateChecker.swift */; };
+		D12000000000000000000205 /* GitHubUpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000105 /* GitHubUpdateChecker.swift */; };
+		D12000000000000000000206 /* AppStoreMacAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000106 /* AppStoreMacAvailability.swift */; };
+		D12000000000000000000207 /* SteamInventory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000107 /* SteamInventory.swift */; };
+		D12000000000000000000208 /* GitHubSourceSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000108 /* GitHubSourceSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -67,6 +76,15 @@
 		B10000000000000000000114 /* PopClipDirectoryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopClipDirectoryClient.swift; sourceTree = "<group>"; };
 		B10000000000000000000115 /* PopClipUpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopClipUpdateChecker.swift; sourceTree = "<group>"; };
 		B10000000000000000000116 /* SkippedUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkippedUpdate.swift; sourceTree = "<group>"; };
+		B10000000000000000000117 /* SelfUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfUpdater.swift; sourceTree = "<group>"; };
+		D12000000000000000000101 /* SourceBinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceBinding.swift; sourceTree = "<group>"; };
+		D12000000000000000000102 /* UpdateManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateManifest.swift; sourceTree = "<group>"; };
+		D12000000000000000000103 /* SourceDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceDiscovery.swift; sourceTree = "<group>"; };
+		D12000000000000000000104 /* ElectronUpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElectronUpdateChecker.swift; sourceTree = "<group>"; };
+		D12000000000000000000105 /* GitHubUpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubUpdateChecker.swift; sourceTree = "<group>"; };
+		D12000000000000000000106 /* AppStoreMacAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreMacAvailability.swift; sourceTree = "<group>"; };
+		D12000000000000000000107 /* SteamInventory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamInventory.swift; sourceTree = "<group>"; };
+		D12000000000000000000108 /* GitHubSourceSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubSourceSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +123,7 @@
 			children = (
 				B10000000000000000000101 /* UpPearApp.swift */,
 				B10000000000000000000102 /* UpdateModel.swift */,
+				B10000000000000000000117 /* SelfUpdater.swift */,
 			);
 			path = UpPear/App;
 			sourceTree = "<group>";
@@ -115,6 +134,7 @@
 				B10000000000000000000103 /* MainWindow.swift */,
 				B10000000000000000000104 /* MenuBarView.swift */,
 				B10000000000000000000105 /* RecordDetail.swift */,
+				D12000000000000000000108 /* GitHubSourceSheet.swift */,
 				B10000000000000000000106 /* SettingsView.swift */,
 			);
 			path = UpPear/Views;
@@ -129,6 +149,13 @@
 				B1000000000000000000010A /* CommandRunner.swift */,
 				B1000000000000000000010B /* HomebrewUpdateChecker.swift */,
 				B1000000000000000000010C /* Models.swift */,
+				D12000000000000000000107 /* SteamInventory.swift */,
+				D12000000000000000000106 /* AppStoreMacAvailability.swift */,
+				D12000000000000000000105 /* GitHubUpdateChecker.swift */,
+				D12000000000000000000104 /* ElectronUpdateChecker.swift */,
+				D12000000000000000000103 /* SourceDiscovery.swift */,
+				D12000000000000000000102 /* UpdateManifest.swift */,
+				D12000000000000000000101 /* SourceBinding.swift */,
 				B1000000000000000000010D /* Networking.swift */,
 				B1000000000000000000010E /* SparkleUpdateChecker.swift */,
 				B1000000000000000000010F /* UpdateAction.swift */,
@@ -236,8 +263,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D12000000000000000000201 /* SourceBinding.swift in Sources */,
+				D12000000000000000000202 /* UpdateManifest.swift in Sources */,
+				D12000000000000000000203 /* SourceDiscovery.swift in Sources */,
+				D12000000000000000000204 /* ElectronUpdateChecker.swift in Sources */,
+				D12000000000000000000205 /* GitHubUpdateChecker.swift in Sources */,
+				D12000000000000000000206 /* AppStoreMacAvailability.swift in Sources */,
+				D12000000000000000000207 /* SteamInventory.swift in Sources */,
+				D12000000000000000000208 /* GitHubSourceSheet.swift in Sources */,
 				C10000000000000000000201 /* UpPearApp.swift in Sources */,
 				C10000000000000000000202 /* UpdateModel.swift in Sources */,
+				C10000000000000000000217 /* SelfUpdater.swift in Sources */,
 				C10000000000000000000203 /* MainWindow.swift in Sources */,
 				C10000000000000000000204 /* MenuBarView.swift in Sources */,
 				C10000000000000000000205 /* RecordDetail.swift in Sources */,
@@ -324,7 +360,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 6;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = UpPear/Resources/Info.plist;
@@ -332,7 +368,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.uppear.UpPear;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -348,7 +384,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 6;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = UpPear/Resources/Info.plist;
@@ -356,7 +392,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.uppear.UpPear;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

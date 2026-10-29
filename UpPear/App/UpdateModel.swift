@@ -22,6 +22,7 @@ final class UpdateModel {
     var notifyNewUpdates: Bool { didSet { defaults.set(notifyNewUpdates, forKey: "notifyNewUpdates") } }
     var ignoredIDs: Set<String>
     private(set) var skippedVersions: [String: SkippedUpdate]
+    private(set) var githubBindings: [GitHubSourceBinding]
     var loginEnabled = SMAppService.mainApp.status == .enabled
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -32,9 +33,31 @@ final class UpdateModel {
     @ObservationIgnored private var lastAttempt: Date?
     @ObservationIgnored private var icons: [String: NSImage] = [:]
 
-    var records: [UpdateRecord] { UpdateSkipPolicy.applying(skippedVersions, to: snapshot?.records ?? []) }
+    private func displayRecords(_ records: [UpdateRecord]) -> [UpdateRecord] {
+        let safe = records.map { record in
+            var record = record
+            if ignoredIDs.contains(record.id) {
+                record.state = .skipped
+                return record
+            }
+            // Scans omit ignored targets. Restoring them is a local operation;
+            // retain the row and wait for the next explicitly requested check.
+            if record.state == .skipped {
+                record.state = .unverified
+                record.detail = "尚未检查。"
+            }
+            if record.source == .appStore, record.app?.wrapped == true,
+               record.state == .updateAvailable, record.appStoreMac?.status != .available {
+                record.state = .unverified
+                record.detail = "Mac 可安装性待核实。"
+            }
+            return record
+        }
+        return UpdateSkipPolicy.applying(skippedVersions, to: safe)
+    }
+    var records: [UpdateRecord] { displayRecords(snapshot?.records ?? []) }
     var updateCount: Int { records.filter { $0.state == .updateAvailable }.count }
-    var failureCount: Int { snapshot?.failureCount ?? 0 }
+    var failureCount: Int { records.filter { $0.state == .failed }.count }
     var ignoredCount: Int { ignoredIDs.count }
     var skippedRecords: [UpdateRecord] {
         let byID = Dictionary(grouping: records, by: \.id)
@@ -50,6 +73,9 @@ final class UpdateModel {
 
     init(defaults: UserDefaults = .standard, cacheURL: URL? = nil) {
         self.defaults = defaults
+        githubBindings = defaults.data(forKey: "githubSourceBindings").flatMap {
+            try? JSONDecoder().decode([GitHubSourceBinding].self, from: $0)
+        } ?? []
         primaryRegion = defaults.string(forKey: "primaryRegion") ?? "CN"
         includePreReleases = defaults.bool(forKey: "includePreReleases")
         includeFormulae = defaults.object(forKey: "includeFormulae") as? Bool ?? true
@@ -89,12 +115,14 @@ final class UpdateModel {
         errorMessage = nil
         lastAttempt = Date()
         progress = ScanProgress("正在准备检查…")
-        let options = CheckOptions(primaryRegion: primaryRegion, includePreReleases: includePreReleases,
+        var options = CheckOptions(primaryRegion: primaryRegion, includePreReleases: includePreReleases,
                                    includeFormulae: includeFormulae, ignoredIDs: ignoredIDs)
+        options.githubBindings = githubBindings
+        let scanOptions = options
         checkTask = Task { [weak self] in
             guard let self else { return }
             do {
-                let result = try await UpdateEngine.scan(options: options) { [weak self] progress in
+                let result = try await UpdateEngine.scan(options: scanOptions) { [weak self] progress in
                     await MainActor.run { self?.progress = progress }
                 }
                 try Task.checkCancellation()
@@ -102,6 +130,12 @@ final class UpdateModel {
                 self.skippedVersions = UpdateSkipPolicy.retaining(self.skippedVersions, after: result.records)
                 self.persistSkippedVersions()
                 self.snapshot = result
+                for info in result.records.compactMap(\.github) where info.binding.manuallySelected {
+                    if let index = self.githubBindings.firstIndex(where: { $0.id == info.binding.id }) {
+                        self.githubBindings[index] = info.binding
+                    }
+                }
+                self.persistGitHubBindings()
                 self.persist(result)
                 self.notifyIfNeeded(result, previous: previous)
             } catch is CancellationError {
@@ -121,7 +155,6 @@ final class UpdateModel {
         skippedVersions.removeValue(forKey: record.id)
         persistSkippedVersions()
         defaults.set(Array(ignoredIDs).sorted(), forKey: "ignoredIDs")
-        checkNow()
     }
 
     func skipUpdate(_ record: UpdateRecord) {
@@ -149,7 +182,7 @@ final class UpdateModel {
             }
         case .brewUpgrade:
             pendingUpgrade = record
-        case .extensionDownload(let url), .officialPage(let url):
+        case .extensionDownload(let url), .officialPage(let url), .steam(let url):
             if !NSWorkspace.shared.open(url) { errorMessage = "无法打开官方更新入口。" }
         case .manual:
             errorMessage = record.isPinned ? "此 Formula 已固定版本。请在 Homebrew 中自行解除固定后再升级。"
@@ -188,6 +221,47 @@ final class UpdateModel {
         guard case .brewUpgrade(let plan) = ActionResolver.action(for: record, primaryRegion: primaryRegion) else { return }
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(plan.displayCommand, forType: .string)
+    }
+
+    func githubBinding(for app: AppInfo) -> GitHubSourceBinding? {
+        GitHubSourceBinding.resolve(githubBindings, apps: [app])[app.id]
+    }
+
+    func saveGitHubBinding(_ binding: GitHubSourceBinding, preview: UpdateRecord? = nil) {
+        guard !isChecking, !isUpgrading else { return }
+        githubBindings.removeAll { $0.id == binding.id || $0.installationPath == binding.installationPath }
+        githubBindings.append(binding)
+        persistGitHubBindings()
+        if let preview, preview.id == binding.installationPath,
+           preview.github?.binding.id == binding.id {
+            replaceRecord(preview)
+        } else if let app = snapshot?.records.first(where: { $0.id == binding.installationPath })?.app {
+            var pending = UpdateRecord(app: app, source: .github, state: .unverified, detail: "尚未检查。")
+            pending.github = GitHubUpdateInfo(binding: binding, checkedAt: Date(), identityNote: "用户指定")
+            replaceRecord(pending)
+        }
+    }
+
+    func removeGitHubBinding(for app: AppInfo) {
+        guard !isChecking, !isUpgrading else { return }
+        let id = githubBinding(for: app)?.id
+        githubBindings.removeAll { $0.installationPath == app.id || $0.id == id }
+        persistGitHubBindings()
+        replaceRecord(SourceDiscovery.pendingRecord(for: app))
+    }
+
+    private func replaceRecord(_ record: UpdateRecord) {
+        guard var updated = snapshot, let index = updated.records.firstIndex(where: { $0.id == record.id }) else { return }
+        updated.records[index] = record
+        skippedVersions.removeValue(forKey: record.id)
+        persistSkippedVersions()
+        snapshot = updated
+        persist(updated)
+    }
+
+    private func persistGitHubBindings() {
+        do { defaults.set(try JSONEncoder().encode(githubBindings), forKey: "githubSourceBindings") }
+        catch { errorMessage = "GitHub 来源设置未能保存：\(error.localizedDescription)" }
     }
 
     func icon(for record: UpdateRecord) -> NSImage {
@@ -237,9 +311,9 @@ final class UpdateModel {
     private func notifyIfNeeded(_ result: ScanSnapshot, previous: ScanSnapshot?) {
         guard notifyNewUpdates else { return }
         func fingerprint(_ record: UpdateRecord) -> String { record.id + "@" + (record.availableVersion ?? "") + "+" + (record.availableBuild ?? "") }
-        let seen = Set(UpdateSkipPolicy.applying(skippedVersions, to: previous?.records ?? [])
+        let seen = Set(displayRecords(previous?.records ?? [])
             .filter { $0.state == .updateAvailable }.map(fingerprint))
-        let newUpdates = UpdateSkipPolicy.applying(skippedVersions, to: result.records)
+        let newUpdates = displayRecords(result.records)
             .filter { $0.state == .updateAvailable && !seen.contains(fingerprint($0)) }
         guard !newUpdates.isEmpty else { return }
         let content = UNMutableNotificationContent()

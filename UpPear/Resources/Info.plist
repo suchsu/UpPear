@@ -17,5 +17,13 @@
     <key>NSHumanReadableCopyright</key><string>Derived from Pearcleaner by Alin Lupascu / alienator88. UpPear modifications © 2026 UpPear contributors.</string>
     <key>UpPearUpstreamCommit</key><string>c52695d90c43f60abd5cd10c363f2e122c65f191</string>
     <key>UpPearSourceCommit</key><string>$(UPPEAR_SOURCE_COMMIT)</string>
+    <key>SUFeedURL</key><string>https://github.com/suchsu/UpPear/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key><string>TWDsH9DHSKsJJA3IliPKZr4+eOooM3q9ixxaOBPQQTA=</string>
+    <key>SUEnableAutomaticChecks</key><true/>
+    <key>SUScheduledCheckInterval</key><integer>86400</integer>
+    <key>SUAutomaticallyUpdate</key><false/>
+    <key>SUAllowsAutomaticUpdates</key><false/>
+    <key>SUVerifyUpdateBeforeExtraction</key><true/>
+    <key>SUSendProfileInfo</key><false/>
 </dict>
 </plist>
