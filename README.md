@@ -4,16 +4,22 @@ UpPear — Keep your Mac apps up to date.
 
 UpPear 是一款原生 macOS 更新管理器，可统一查看应用、软件包和 PopClip 扩展的更新。作者：**suchsu**。
 
-**UpPear 1.1.0 现已发布。** 支持 macOS 14 或更高版本，兼容 Apple Silicon 和 Intel Mac，安装包已完成开发者签名和 Apple 公证。
+**UpPear 1.2.0 现已发布。** 支持 macOS 14 或更高版本，兼容 Apple Silicon 和 Intel Mac，安装包已完成开发者签名和 Apple 公证。
 
-[下载 DMG 安装包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.1.0/UpPear-1.1.0-macOS-universal.dmg) · [下载 ZIP 压缩包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.1.0/UpPear-1.1.0-macOS-universal.zip) · [查看 1.1.0 发行说明](https://github.com/suchsu/UpPear/releases/tag/uppear-v1.1.0)
+[下载 DMG 安装包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.2.0/UpPear-1.2.0-macOS-universal.dmg) · [下载 ZIP 压缩包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.2.0/UpPear-1.2.0-macOS-universal.zip) · [查看 1.2.0 发行说明](https://github.com/suchsu/UpPear/releases/tag/uppear-v1.2.0)
 
-## 1.1.0 更新内容
+## 1.2.0 更新内容
 
-- 新增 **Microsoft AutoUpdate** 支持，检查微软应用更新并打开官方更新器安装。
-- 新增 **PopClip 扩展更新**支持，检查当前 PopClip 和 macOS 的兼容性，必要时查找可核实的历史兼容版本。
-- 新增 **“跳过此更新”**，只跳过当前版本，后续新版自动恢复提醒；与“已忽略”共用管理入口，可分别恢复。
-- 修复 AdGuard、Logi Options+ 等应用自行更新后，Homebrew 仍显示旧版本或重复项目的问题。
+- 新增 GitHub Releases 和标准 Electron 更新来源，支持指定 GitHub 仓库、fork、分支、发布流及安装包。
+- 新增 Steam 来源，识别本地安装库与游戏，通过 Steam 客户端检查和更新。
+- 新增 UpPear 自身更新，可在菜单和设置中检查新版。
+- 修复 iPhone/iPad 应用不再允许 Mac 安装时仍提示更新的问题。
+- 优化忽略、跳过、恢复及来源设置，操作即时生效，保留当前详情。
+- 侧边栏仅显示本机已有软件或插件的来源，精简界面说明。
+
+支持 macOS 14 及以上，兼容 Apple Silicon 和 Intel Mac。安装包已签名并通过 Apple 公证。
+
+1.1.0 及更早版本需要手动安装一次 1.2.0，后续版本可通过 UpPear 自身更新功能获取。
 
 ## 支持的更新来源
 
