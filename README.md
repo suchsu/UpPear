@@ -4,22 +4,15 @@ UpPear — Keep your Mac apps up to date.
 
 UpPear 是一款原生 macOS 更新管理器，可统一查看应用、软件包和 PopClip 扩展的更新。作者：**suchsu**。
 
-**UpPear 1.2.0 现已发布。** 支持 macOS 14 或更高版本，兼容 Apple Silicon 和 Intel Mac，安装包已完成开发者签名和 Apple 公证。
+**UpPear 1.2.1 现已发布。** 支持 macOS 14 或更高版本，兼容 Apple Silicon 和 Intel Mac，安装包已完成开发者签名和 Apple 公证。
 
-[下载 DMG 安装包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.2.0/UpPear-1.2.0-macOS-universal.dmg) · [下载 ZIP 压缩包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.2.0/UpPear-1.2.0-macOS-universal.zip) · [查看 1.2.0 发行说明](https://github.com/suchsu/UpPear/releases/tag/uppear-v1.2.0)
+[下载 DMG 安装包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.2.1/UpPear-1.2.1-macOS-universal.dmg) · [下载 ZIP 压缩包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.2.1/UpPear-1.2.1-macOS-universal.zip) · [查看 1.2.1 发行说明](https://github.com/suchsu/UpPear/releases/tag/uppear-v1.2.1)
 
-## 1.2.0 更新内容
+## 1.2.1 更新内容
 
-- 新增 GitHub Releases 和标准 Electron 更新来源，支持指定 GitHub 仓库、fork、分支、发布流及安装包。
-- 新增 Steam 来源，识别本地安装库与游戏，通过 Steam 客户端检查和更新。
-- 新增 UpPear 自身更新，可在菜单和设置中检查新版。
-- 修复 iPhone/iPad 应用不再允许 Mac 安装时仍提示更新的问题。
-- 优化忽略、跳过、恢复及来源设置，操作即时生效，保留当前详情。
-- 侧边栏仅显示本机已有软件或插件的来源，精简界面说明。
+- Steam 游戏现由 UpPear 检查更新，安装更新交给 Steam。
 
-支持 macOS 14 及以上，兼容 Apple Silicon 和 Intel Mac。安装包已签名并通过 Apple 公证。
-
-1.1.0 及更早版本需要手动安装一次 1.2.0，后续版本可通过 UpPear 自身更新功能获取。
+1.1.0 及更早版本需手动安装新版；1.2.0 可通过 UpPear 自身更新功能获取。
 
 ## 支持的更新来源
 
@@ -27,6 +20,7 @@ UpPear 是一款原生 macOS 更新管理器，可统一查看应用、软件包
 - **Homebrew Cask / Formula**：结合安装记录、本机应用版本和当前系统平台检查。单项升级前显示命令并确认，已固定的版本保持固定。
 - **Sparkle**：通过应用的更新源检查兼容版本，打开原应用完成更新。
 - **Microsoft AutoUpdate**：使用本机官方更新器检查微软应用，沿用当前更新频道；App Store 版本继续通过商店更新。
+- **Steam 游戏**：Steam 游戏现由 UpPear 检查更新，安装更新交给 Steam。
 - **PopClip 扩展**：按唯一标识符匹配官方目录，检查扩展发布版本及兼容要求。下载后由 PopClip 确认安装；可单独忽略 PopClip 主程序，继续检查扩展。
 
 同一应用的多个更新来源会合并显示。检查失败、版本待确认和不兼容的项目会单独标明，不计入可用更新数量。
@@ -56,7 +50,7 @@ swift build --scratch-path /private/tmp/UpPear-build
 
 ## 检测与隐私
 
-检查结果和设置保存在本机。版本查询会访问 Apple、Homebrew、PopClip 官方目录及对应应用的更新服务器；Microsoft 检查使用本机 Microsoft AutoUpdate。
+检查结果和设置保存在本机。版本查询会访问 Apple、Homebrew、PopClip 官方目录及对应应用的更新服务器；Steam 游戏检查直接查询 Valve 官方服务，Microsoft 检查使用本机 Microsoft AutoUpdate。
 
 PopClip 官方目录数据通常缓存一小时；网络不可用时保留已有信息并显示数据时间，重新核实前关闭扩展下载入口。UpPear 不直接覆盖已安装的扩展，也不修改 PopClip 的配置、签名或授权。
 
