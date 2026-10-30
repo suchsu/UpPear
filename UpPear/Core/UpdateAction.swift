@@ -18,7 +18,7 @@ public enum UpdateAction: Sendable {
         case .microsoftAutoUpdate: "打开 Microsoft AutoUpdate"
         case .extensionDownload: "下载兼容扩展"
         case .officialPage: "查看官方详情"
-        case .steam: "在 Steam 中检查"
+        case .steam: "打开 Steam"
         case .manual: "手动检查"
         }
     }

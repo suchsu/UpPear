@@ -19,7 +19,7 @@ struct RecordDetail: View {
                     GridRow { Text("更新来源").foregroundStyle(.secondary); Text(record.source.title) }
                     GridRow { Text("已安装").foregroundStyle(.secondary); Text(record.installedVersion.isEmpty ? "未知" : record.installedVersion) }
                     if let installedBuild = record.installedBuild { GridRow { Text("构建号").foregroundStyle(.secondary); Text(installedBuild) } }
-                    if let version = record.availableVersion { GridRow { Text("源中版本").foregroundStyle(.secondary); Text(version) } }
+                    if let version = record.availableVersion { GridRow { Text(record.source == .steam ? "分支构建" : "源中版本").foregroundStyle(.secondary); Text(version) } }
                     if let build = record.availableBuild { GridRow { Text("新构建号").foregroundStyle(.secondary); Text(build) } }
                     if let region = record.foundInRegion { GridRow { Text("商店地区").foregroundStyle(.secondary); Text(region) } }
                     if let info = record.microsoft {
@@ -43,8 +43,7 @@ struct RecordDetail: View {
                     if let info = record.steam {
                         if let id = info.appID { GridRow { Text("Steam App ID").foregroundStyle(.secondary); Text(id) } }
                         if let branch = info.branch { GridRow { Text("本地分支").foregroundStyle(.secondary); Text(branch) } }
-                        GridRow { Text("安装证据").foregroundStyle(.secondary); Text(info.installationConfirmed ? "已核实" : "仅启动入口或待核实") }
-                        if let date = info.manifestModifiedAt { GridRow { Text("本地记录时间").foregroundStyle(.secondary); Text(date, format: .dateTime.year().month().day().hour().minute()) } }
+                        if let date = info.checkedAt { GridRow { Text("检查时间").foregroundStyle(.secondary); Text(date, format: .dateTime.year().month().day().hour().minute()) } }
                     }
                     if let info = record.popClip {
                         GridRow { Text("扩展标识符").foregroundStyle(.secondary); Text(info.identifier ?? "未知") }

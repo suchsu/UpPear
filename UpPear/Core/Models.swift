@@ -105,6 +105,7 @@ public struct UpdateRecord: Identifiable, Codable, Sendable {
     public var appStoreMac: AppStoreMacAvailability?
     public var statusTitle: String {
         if state == .managed { return "由 \(source.title) 管理" }
+        if state == .current, source == .steam { return "Mac 未发现更新" }
         if state == .unverified, source == .steam, steam?.installationConfirmed == false { return "未确认安装" }
         if source == .appStore, app?.wrapped == true {
             if state == .incompatible, appStoreMac?.status == .unavailable { return "Mac 不可安装" }
@@ -164,7 +165,7 @@ public struct CheckOptions: Sendable {
 
 public struct ScanSnapshot: Codable, Sendable {
     // Refresh inventories made before PKG casks were associated with bundles.
-    public static let currentSchemaVersion = 4
+    public static let currentSchemaVersion = 5
     public let schemaVersion: Int?
     public let completedAt: Date
     public var records: [UpdateRecord]

@@ -8,6 +8,12 @@ public struct SteamUpdateInfo: Codable, Sendable {
     public var libraryURL: URL?
     public var manifestModifiedAt: Date?
     public var launchers: [URL]
+    public var installedDepots: [String: String]?
+    public var mountedBranch: String?
+    public var language: String?
+    public var stateFlags: UInt64?
+    public var ambiguousInstallation: Bool?
+    public var checkedAt: Date?
 }
 
 struct SteamInventory: Sendable {
@@ -64,7 +70,7 @@ struct SteamInventory: Sendable {
                               manifest.lastPathComponent == "appmanifest_\(id).acf",
                               let name = game["name"] as? String, !name.isEmpty,
                               let directory = game["installdir"] as? String,
-                              !directory.isEmpty, !directory.hasPrefix("/"),
+                              !directory.isEmpty, !directory.hasPrefix("/"), !directory.contains("\0"),
                               !directory.components(separatedBy: "/").contains(".."), !directory.contains("\\") else { throw SourceError.invalidManifest }
                         let common = steamapps.appendingPathComponent("common").resolvingSymlinksInPath().standardizedFileURL
                         let installation = common.appendingPathComponent(directory).resolvingSymlinksInPath().standardizedFileURL
@@ -72,18 +78,31 @@ struct SteamInventory: Sendable {
                         let exists = installation.path.hasPrefix(common.path + "/") &&
                             manager.fileExists(atPath: installation.path, isDirectory: &isDirectory) && isDirectory.boolValue
                         let build = game["buildid"] as? String
-                        let branch = (game["UserConfig"] as? [String: Any])?["BetaKey"] as? String
+                        let user = game["UserConfig"] as? [String: Any] ?? [:]
+                        let mounted = game["MountedConfig"] as? [String: Any] ?? [:]
+                        func branch(_ values: [String: Any]) -> String {
+                            let value = values["BetaKey"] as? String ?? "public"
+                            return value.isEmpty ? "public" : value
+                        }
+                        var depots: [String: String] = [:]
+                        for (id, value) in game["InstalledDepots"] as? [String: Any] ?? [:] {
+                            if validID(id), let manifest = (value as? [String: Any])?["manifest"] as? String,
+                               UInt64(manifest).map({ $0 > 0 }) == true { depots[id] = manifest }
+                        }
                         let shortcuts = launchers[id] ?? []
-                        var record = UpdateRecord(app: shortcuts.first, source: .steam, state: exists ? .managed : .unverified,
-                            detail: exists ? "已核实 Steam 安装清单及游戏目录。版本使用本地 build ID，更新与分支可用性由 Steam 实时确认；本地 StateFlags 不代表当前远端状态。"
+                        var record = UpdateRecord(app: shortcuts.first, source: .steam, state: .unverified,
+                            detail: exists ? "尚未检查。"
                                 : "存在 Steam 清单，但未找到游戏安装目录，安装尚未确认。请在 Steam 中核实。",
                             id: "steam:" + id, name: name, installedVersion: build.map { "build " + $0 } ?? "未知构建")
-                        record.steam = SteamUpdateInfo(appID: id, buildID: build, branch: branch ?? "public",
+                        record.steam = SteamUpdateInfo(appID: id, buildID: build, branch: branch(user),
                             installationConfirmed: exists, libraryURL: library,
                             manifestModifiedAt: try? manifest.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate,
-                            launchers: shortcuts.map(\.path))
+                            launchers: shortcuts.map(\.path), installedDepots: depots,
+                            mountedBranch: game["MountedConfig"] == nil ? nil : branch(mounted),
+                            language: user["language"] as? String, stateFlags: (game["StateFlags"] as? String).flatMap(UInt64.init))
                         if let prior = games[id], prior.steam?.installationConfirmed == true, exists {
                             var conflict = prior; conflict.state = .unverified
+                            conflict.steam?.ambiguousInstallation = true
                             conflict.detail = "在多个 Steam 库中发现此游戏的安装清单，请在 Steam 中确认实际安装和分支。"
                             games[id] = conflict
                         } else if games[id]?.steam?.installationConfirmed != true { games[id] = record }
@@ -103,15 +122,23 @@ struct SteamInventory: Sendable {
     }
 
     static func launcherID(app: AppInfo) -> String? {
-        let plist = app.bundlePath.appendingPathComponent("Contents/Info.plist")
+        launcherID(bundlePath: app.bundlePath)
+    }
+
+    static func launcherID(bundlePath: URL) -> String? {
+        let plist = bundlePath.appendingPathComponent("Contents/Info.plist")
         guard let data = try? boundedData(plist),
               let info = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else { return nil }
+        return launcherID(bundlePath: bundlePath, information: info)
+    }
+
+    static func launcherID(bundlePath: URL, information info: [String: Any]) -> String? {
         for key in ["SteamAppId", "SteamAppID"] {
             if let value = info[key], validID(String(describing: value)) { return String(describing: value) }
         }
         guard let executable = info["CFBundleExecutable"] as? String,
               !executable.contains("/"), executable != "..",
-              let script = try? boundedData(app.bundlePath.appendingPathComponent("Contents/MacOS/" + executable)),
+              let script = try? boundedData(bundlePath.appendingPathComponent("Contents/MacOS/" + executable)),
               script.count < 64_000, let text = String(data: script, encoding: .utf8), text.hasPrefix("#!") else { return nil }
         let regex = try? NSRegularExpression(pattern: #"steam://(?:rungameid|run)/(\d+)"#)
         guard let matches = regex?.matches(in: text, range: NSRange(text.startIndex..., in: text)),
@@ -120,7 +147,7 @@ struct SteamInventory: Sendable {
     }
 
     private static func validID(_ id: String) -> Bool {
-        id.range(of: #"^[1-9][0-9]{0,11}$"#, options: .regularExpression) != nil
+        UInt32(id).map { $0 > 0 && String($0) == id } == true
     }
 
     private static func boundedData(_ url: URL) throws -> Data {
@@ -131,7 +158,7 @@ struct SteamInventory: Sendable {
 
 enum ValveKeyValues {
     static func parse(_ data: Data) throws -> [String: Any] {
-        guard data.count <= 2_000_000, let text = String(data: data, encoding: .utf8) else { throw SourceError.invalidManifest }
+        guard data.count <= 2_000_000, let text = String(data: data, encoding: .utf8), !text.contains("\0") else { throw SourceError.invalidManifest }
         let characters = Array(text); var index = 0
         func token() throws -> String? {
             while index < characters.count {
@@ -149,8 +176,15 @@ enum ValveKeyValues {
                 let char = characters[index]; index += 1
                 if char == "\"" { return result }
                 if char == "\\" {
-                    guard index < characters.count, ["\\", "\""].contains(characters[index]) else { throw SourceError.invalidManifest }
-                    result.append(characters[index]); index += 1
+                    guard index < characters.count else { throw SourceError.invalidManifest }
+                    switch characters[index] {
+                    case "\\", "\"": result.append(characters[index])
+                    case "n": result.append("\n")
+                    case "r": result.append("\r")
+                    case "t": result.append("\t")
+                    default: throw SourceError.invalidManifest
+                    }
+                    index += 1
                 } else { result.append(char) }
             }
             throw SourceError.invalidManifest

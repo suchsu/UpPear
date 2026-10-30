@@ -80,7 +80,7 @@ public enum UpdateEngine {
                 detail: app.isSetapp ? "由 Setapp 管理。" : "尚未指定更新来源。")
         }
         records += discoveryErrors
-        records += steam.records.map { original in
+        let steamRecords = steam.records.map { original in
             var record = original
             if options.ignoredIDs.contains(record.id) || record.steam?.launchers.contains(where: { options.ignoredIDs.contains($0.standardizedFileURL.path) }) == true {
                 record.state = .skipped; record.detail = "已从自动检查中忽略，可在详情中恢复。"
@@ -92,7 +92,7 @@ public enum UpdateEngine {
                 id: package.id, name: package.name, installedVersion: package.version,
                 packageName: package.name, brewExecutable: package.brewExecutable, isPinned: package.isPinned)
         }
-        let total = packages.count + masApps.count + sparkleApps.count + microsoftApps.count + extensions.extensions.count + githubTargets.count + electronTargets.count
+        let total = packages.count + masApps.count + sparkleApps.count + microsoftApps.count + extensions.extensions.count + githubTargets.count + electronTargets.count + steamRecords.filter(SteamUpdateChecker.isCheckable).count
         let counter = ProgressCounter(total: total, progress: progress)
         await progress(ScanProgress("正在查询更新源…", total: total))
         async let storeResults = checkInBatches(masApps) { app in
@@ -130,9 +130,12 @@ public enum UpdateEngine {
             let result = await ElectronUpdateChecker.check(app: app, configuration: configuration)
             await counter.didCheck(app.appName); return result
         }
-        let checked = await (storeResults, sparkleResults, brewResults, microsoftResults, popClipResults, githubResults, electronResults)
+        async let steamResults = SteamUpdateChecker.check(records: steamRecords) { name in
+            await counter.didCheck(name)
+        }
+        let checked = await (storeResults, sparkleResults, brewResults, microsoftResults, popClipResults, githubResults, electronResults, steamResults)
         try Task.checkCancellation()
-        records += checked.0 + checked.1 + checked.2 + checked.3 + checked.4 + checked.5 + checked.6
+        records += checked.0 + checked.1 + checked.2 + checked.3 + checked.4 + checked.5 + checked.6 + checked.7
         let merged = merge(records: records).sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
         return ScanSnapshot(records: merged, warnings: scan.warnings + inventory.warnings + extensions.warnings + steam.warnings)
     }

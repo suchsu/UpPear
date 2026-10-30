@@ -67,8 +67,14 @@ public enum AppScanner {
         }
         let plistURL = wrapped ? bundlePath.appendingPathComponent("Info.plist") : bundlePath.appendingPathComponent("Contents/Info.plist")
         guard let data = try? Data(contentsOf: plistURL),
-              let dict = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
-              let bundleIdentifier = dict["CFBundleIdentifier"] as? String, !bundleIdentifier.isEmpty else { return nil }
+              let dict = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else { return nil }
+        let bundleIdentifier = dict["CFBundleIdentifier"] as? String ?? ""
+        if bundleIdentifier.isEmpty {
+            // Steam's generated .app shortcuts deliberately have no bundle ID
+            // or game version. Their static Steam URL is valid inventory data.
+            guard !wrapped, SteamInventory.launcherID(bundlePath: bundlePath, information: dict) != nil else { return nil }
+            return AppInfo(path: path, bundleIdentifier: "", appName: path.deletingPathExtension().lastPathComponent, appVersion: "")
+        }
 
         let appVersion = dict["CFBundleShortVersionString"] as? String ?? ""
         let appBuildNumber = dict["CFBundleVersion"] as? String
