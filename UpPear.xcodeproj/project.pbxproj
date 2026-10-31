@@ -46,6 +46,11 @@
 		D12000000000000000000208 /* GitHubSourceSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000108 /* GitHubSourceSheet.swift */; };
 		D12100000000000000000209 /* SteamCatalogClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12100000000000000000109 /* SteamCatalogClient.swift */; };
 		D1210000000000000000020A /* SteamUpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1210000000000000000010A /* SteamUpdateChecker.swift */; };
+		D12200000000000000000201 /* AppStoreQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12200000000000000000101 /* AppStoreQuery.swift */; };
+		D12200000000000000000202 /* AppStoreHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12200000000000000000102 /* AppStoreHTTPClient.swift */; };
+		D12200000000000000000203 /* AppStoreProductPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12200000000000000000103 /* AppStoreProductPage.swift */; };
+		D12200000000000000000204 /* AppStoreSnapshotPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12200000000000000000104 /* AppStoreSnapshotPolicy.swift */; };
+		D12200000000000000000205 /* AppStoreCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12200000000000000000105 /* AppStoreCatalog.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -89,6 +94,11 @@
 		D12000000000000000000108 /* GitHubSourceSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubSourceSheet.swift; sourceTree = "<group>"; };
 		D12100000000000000000109 /* SteamCatalogClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamCatalogClient.swift; sourceTree = "<group>"; };
 		D1210000000000000000010A /* SteamUpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamUpdateChecker.swift; sourceTree = "<group>"; };
+		D12200000000000000000101 /* AppStoreQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreQuery.swift; sourceTree = "<group>"; };
+		D12200000000000000000102 /* AppStoreHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreHTTPClient.swift; sourceTree = "<group>"; };
+		D12200000000000000000103 /* AppStoreProductPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreProductPage.swift; sourceTree = "<group>"; };
+		D12200000000000000000104 /* AppStoreSnapshotPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreSnapshotPolicy.swift; sourceTree = "<group>"; };
+		D12200000000000000000105 /* AppStoreCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreCatalog.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -157,6 +167,11 @@
 				D1210000000000000000010A /* SteamUpdateChecker.swift */,
 				D12100000000000000000109 /* SteamCatalogClient.swift */,
 				D12000000000000000000106 /* AppStoreMacAvailability.swift */,
+				D12200000000000000000105 /* AppStoreCatalog.swift */,
+				D12200000000000000000104 /* AppStoreSnapshotPolicy.swift */,
+				D12200000000000000000103 /* AppStoreProductPage.swift */,
+				D12200000000000000000102 /* AppStoreHTTPClient.swift */,
+				D12200000000000000000101 /* AppStoreQuery.swift */,
 				D12000000000000000000105 /* GitHubUpdateChecker.swift */,
 				D12000000000000000000104 /* ElectronUpdateChecker.swift */,
 				D12000000000000000000103 /* SourceDiscovery.swift */,
@@ -275,6 +290,11 @@
 				D12000000000000000000204 /* ElectronUpdateChecker.swift in Sources */,
 				D12000000000000000000205 /* GitHubUpdateChecker.swift in Sources */,
 				D12000000000000000000206 /* AppStoreMacAvailability.swift in Sources */,
+				D12200000000000000000205 /* AppStoreCatalog.swift in Sources */,
+				D12200000000000000000204 /* AppStoreSnapshotPolicy.swift in Sources */,
+				D12200000000000000000203 /* AppStoreProductPage.swift in Sources */,
+				D12200000000000000000202 /* AppStoreHTTPClient.swift in Sources */,
+				D12200000000000000000201 /* AppStoreQuery.swift in Sources */,
 				D12000000000000000000207 /* SteamInventory.swift in Sources */,
 				D1210000000000000000020A /* SteamUpdateChecker.swift in Sources */,
 				D12100000000000000000209 /* SteamCatalogClient.swift in Sources */,
@@ -368,7 +388,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = UpPear/Resources/Info.plist;
@@ -376,7 +396,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.1;
+				MARKETING_VERSION = 1.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = org.uppear.UpPear;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -392,7 +412,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = UpPear/Resources/Info.plist;
@@ -400,7 +420,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.1;
+				MARKETING_VERSION = 1.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = org.uppear.UpPear;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

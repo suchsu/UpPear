@@ -169,7 +169,11 @@ struct MainWindow: View {
             .toolbar {
                 ToolbarItemGroup {
                     if model.operationOutput != nil { Button("操作记录", systemImage: "text.alignleft") { showOutput = true } }
-                    if model.isChecking { Button("取消检查", systemImage: "xmark.circle") { model.cancelCheck() } }
+                    if model.isChecking || !model.retryingAppStoreIDs.isEmpty { Button("取消检查", systemImage: "xmark.circle") { model.cancelCheck() } }
+                    if filter == .failed, !model.failedAppStoreRecords.isEmpty {
+                        Button("重试商店查询", systemImage: "arrow.clockwise.circle") { model.retryFailedAppStore() }
+                            .disabled(model.isChecking || model.isUpgrading || !model.retryingAppStoreIDs.isEmpty)
+                    }
                     Button("检查更新", systemImage: "arrow.clockwise") { model.checkNow() }
                         .disabled(model.isChecking || model.isUpgrading).keyboardShortcut("r", modifiers: .command)
                 }
@@ -245,6 +249,7 @@ struct MainWindow: View {
             }
             Spacer(minLength: 6)
             VStack(alignment: .trailing, spacing: 5) {
+                if model.retryingAppStoreIDs.contains(record.id) { ProgressView().controlSize(.small) }
                 if record.state == .updateAvailable {
                     Text("\(record.installedVersion.isEmpty ? "未知" : record.installedVersion) → \(record.availableVersion ?? "未知")").font(.caption.monospacedDigit()).lineLimit(1)
                     Text(record.isPinned ? "已固定版本" : (record.isPreRelease ? "预发布版" : "有更新")).font(.caption).foregroundStyle(.green)

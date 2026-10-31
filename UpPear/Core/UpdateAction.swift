@@ -41,7 +41,7 @@ public enum ActionResolver {
     public static func action(for record: UpdateRecord, primaryRegion: String = "CN") -> UpdateAction {
         // Source identity outranks detections and any stale Homebrew metadata.
         if record.app?.isAppStore == true || record.source == .appStore {
-            if record.app?.wrapped == true, record.state != .updateAvailable && record.state != .current,
+            if record.app?.wrapped == true, record.state != .updateAvailable && record.state != .current && record.state != .failed,
                let app = record.app { return .openApplication(app.path) }
             if let id = record.adamID {
                 let region = (record.foundInRegion ?? primaryRegion).lowercased()

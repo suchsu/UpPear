@@ -22,6 +22,15 @@ struct RecordDetail: View {
                     if let version = record.availableVersion { GridRow { Text(record.source == .steam ? "分支构建" : "源中版本").foregroundStyle(.secondary); Text(version) } }
                     if let build = record.availableBuild { GridRow { Text("新构建号").foregroundStyle(.secondary); Text(build) } }
                     if let region = record.foundInRegion { GridRow { Text("商店地区").foregroundStyle(.secondary); Text(region) } }
+                    if let query = record.appStoreQuery {
+                        GridRow {
+                            Text(query.isCached ? "数据时间" : "检查时间").foregroundStyle(.secondary)
+                            Text(query.versionCheckedAt ?? query.checkedAt, format: .dateTime.year().month().day().hour().minute())
+                        }
+                        if let date = query.issue?.retryAt {
+                            GridRow { Text("可重试时间").foregroundStyle(.secondary); Text(date, format: .dateTime.hour().minute()) }
+                        }
+                    }
                     if let info = record.microsoft {
                         GridRow { Text("微软标识符").foregroundStyle(.secondary); Text(info.applicationID) }
                         if let channel = info.channel { GridRow { Text("更新频道").foregroundStyle(.secondary); Text(channel) } }
@@ -69,9 +78,20 @@ struct RecordDetail: View {
                 }
                 VStack(alignment: .leading, spacing: 10) {
                     if record.state != .versionSkipped {
-                        Button(ActionResolver.action(for: record, primaryRegion: model.primaryRegion).title) { model.performAction(record) }
-                            .buttonStyle(.borderedProminent).tint(.green).disabled(model.isChecking || model.isUpgrading)
-                            .accessibilityIdentifier("record-action")
+                        if record.source == .appStore, [.failed, .unverified].contains(record.state) {
+                            Button { model.retryAppStore(record) } label: {
+                                HStack {
+                                    if model.retryingAppStoreIDs.contains(record.id) { ProgressView().controlSize(.small) }
+                                    Text(model.retryingAppStoreIDs.contains(record.id) ? "正在查询" : "重试查询")
+                                }
+                            }.buttonStyle(.borderedProminent).tint(.green)
+                                .disabled(model.isChecking || model.isUpgrading || model.ignoredIDs.contains(record.id) || model.retryingAppStoreIDs.contains(record.id))
+                                .accessibilityIdentifier("record-retry-app-store")
+                            if model.retryingAppStoreIDs.contains(record.id) {
+                                Button("取消查询") { model.cancelAppStoreRetry(record.id) }.buttonStyle(.borderless)
+                            }
+                            sourceAction.buttonStyle(.bordered)
+                        } else { sourceAction.buttonStyle(.borderedProminent).tint(.green) }
                     }
                     if let skipped = model.skippedVersions[record.id] {
                         Label("已跳过 \(skipped.displayVersion)", systemImage: "forward.end")
@@ -114,6 +134,11 @@ struct RecordDetail: View {
             }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
         }
         .sheet(isPresented: $showGitHubSource) { GitHubSourceSheet(record: record, model: model) }
+    }
+
+    private var sourceAction: some View {
+        Button(ActionResolver.action(for: record, primaryRegion: model.primaryRegion).title) { model.performAction(record) }
+            .disabled(model.isChecking || model.isUpgrading).accessibilityIdentifier("record-action")
     }
 
     private static func plainNotes(_ string: String) -> String {

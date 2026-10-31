@@ -15,6 +15,7 @@ final class UpdateModel {
     var isUpgrading = false
     var upgradingName: String?
     var pendingUpgrade: UpdateRecord?
+    private(set) var retryingAppStoreIDs: Set<String> = []
     var primaryRegion: String { didSet { defaults.set(primaryRegion, forKey: "primaryRegion") } }
     var includePreReleases: Bool { didSet { defaults.set(includePreReleases, forKey: "includePreReleases") } }
     var includeFormulae: Bool { didSet { defaults.set(includeFormulae, forKey: "includeFormulae") } }
@@ -32,10 +33,12 @@ final class UpdateModel {
     @ObservationIgnored private var started = false
     @ObservationIgnored private var lastAttempt: Date?
     @ObservationIgnored private var icons: [String: NSImage] = [:]
+    @ObservationIgnored private let appStoreChecker: @Sendable (AppInfo, String, Bool) async -> UpdateRecord
+    @ObservationIgnored private var appStoreRetries: [String: (UUID, Task<Void, Never>)] = [:]
 
     private func displayRecords(_ records: [UpdateRecord]) -> [UpdateRecord] {
         let safe = records.map { record in
-            var record = record
+            var record = AppStoreSnapshotPolicy.display(record, observedAt: snapshot?.completedAt ?? Date())
             if ignoredIDs.contains(record.id) {
                 record.state = .skipped
                 return record
@@ -45,11 +48,6 @@ final class UpdateModel {
             if record.state == .skipped {
                 record.state = .unverified
                 record.detail = "尚未检查。"
-            }
-            if record.source == .appStore, record.app?.wrapped == true,
-               record.state == .updateAvailable, record.appStoreMac?.status != .available {
-                record.state = .unverified
-                record.detail = "Mac 可安装性待核实。"
             }
             return record
         }
@@ -71,8 +69,12 @@ final class UpdateModel {
         snapshot.map { $0.schemaVersion != ScanSnapshot.currentSchemaVersion || Date().timeIntervalSince($0.completedAt) >= 86400 } ?? true
     }
 
-    init(defaults: UserDefaults = .standard, cacheURL: URL? = nil) {
+    init(defaults: UserDefaults = .standard, cacheURL: URL? = nil,
+         appStoreChecker: @escaping @Sendable (AppInfo, String, Bool) async -> UpdateRecord = {
+             await AppStoreUpdateChecker.check(app: $0, primaryRegion: $1, refresh: $2)
+         }) {
         self.defaults = defaults
+        self.appStoreChecker = appStoreChecker
         githubBindings = defaults.data(forKey: "githubSourceBindings").flatMap {
             try? JSONDecoder().decode([GitHubSourceBinding].self, from: $0)
         } ?? []
@@ -102,7 +104,7 @@ final class UpdateModel {
         if needsCheck { checkNow() }
         timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                guard let self, self.dailyCheck, self.needsCheck, !self.isChecking, !self.isUpgrading,
+                guard let self, self.dailyCheck, self.needsCheck, !self.isChecking, !self.isUpgrading, self.retryingAppStoreIDs.isEmpty,
                       self.lastAttempt.map({ Date().timeIntervalSince($0) >= 3600 }) ?? true else { return }
                 self.checkNow()
             }
@@ -111,6 +113,7 @@ final class UpdateModel {
 
     func checkNow() {
         guard !isChecking, !isUpgrading else { return }
+        cancelAppStoreRetries()
         isChecking = true
         errorMessage = nil
         lastAttempt = Date()
@@ -146,12 +149,70 @@ final class UpdateModel {
         }
     }
 
-    func cancelCheck() { checkTask?.cancel() }
+    func cancelCheck() { checkTask?.cancel(); cancelAppStoreRetries() }
+
+    func cancelAppStoreRetry(_ id: String) {
+        appStoreRetries.removeValue(forKey: id)?.1.cancel()
+        retryingAppStoreIDs.remove(id)
+    }
+
+    var failedAppStoreRecords: [UpdateRecord] {
+        records.filter { $0.source == .appStore && $0.state == .failed && $0.app != nil }
+    }
+
+    func retryFailedAppStore() {
+        for record in failedAppStoreRecords { retryAppStore(record) }
+    }
+
+    func retryAppStore(_ record: UpdateRecord) {
+        guard !isChecking, !isUpgrading, record.source == .appStore, let app = record.app,
+              !ignoredIDs.contains(record.id), !retryingAppStoreIDs.contains(record.id) else { return }
+        let id = record.id, token = UUID(), region = primaryRegion
+        retryingAppStoreIDs.insert(id)
+        let checker = appStoreChecker
+        let task = Task { [weak self] in
+            defer {
+                if let self, self.appStoreRetries[id]?.0 == token {
+                    self.appStoreRetries.removeValue(forKey: id); self.retryingAppStoreIDs.remove(id)
+                }
+            }
+            let result = await checker(app, region, true)
+            guard !Task.isCancelled, let self, self.appStoreRetries[id]?.0 == token,
+                  !self.isChecking, var updated = self.snapshot,
+                  let index = updated.records.firstIndex(where: { $0.id == id }),
+                  updated.records[index].app?.bundleIdentifier == app.bundleIdentifier else { return }
+            let previous = updated
+            var replacement = result
+            if replacement.state == .failed, replacement.availableVersion == nil,
+               let prior = updated.records[index].availableVersion {
+                let old = updated.records[index]
+                replacement.availableVersion = prior; replacement.releaseNotes = old.releaseNotes
+                replacement.releaseDate = old.releaseDate; replacement.foundInRegion = old.foundInRegion
+                replacement.appStoreQuery?.versionCheckedAt = old.appStoreQuery?.versionCheckedAt ?? old.appStoreQuery?.checkedAt ?? updated.completedAt
+                replacement.appStoreQuery?.source = old.appStoreQuery?.source
+                replacement.appStoreQuery?.sourceURL = old.appStoreQuery?.sourceURL
+                replacement.appStoreQuery?.isCached = true
+            }
+            updated.records[index] = replacement
+            self.skippedVersions = UpdateSkipPolicy.retaining(self.skippedVersions, after: updated.records)
+            self.persistSkippedVersions(); self.snapshot = updated; self.persist(updated)
+            self.notifyIfNeeded(updated, previous: previous)
+        }
+        appStoreRetries[id] = (token, task)
+    }
+
+    private func cancelAppStoreRetries() {
+        for (_, task) in appStoreRetries.values { task.cancel() }
+        appStoreRetries.removeAll(); retryingAppStoreIDs.removeAll()
+    }
 
     func toggleIgnored(_ record: UpdateRecord) {
         guard !isChecking, !isUpgrading else { return }
         if ignoredIDs.contains(record.id) { ignoredIDs.remove(record.id) }
-        else { ignoredIDs.insert(record.id) }
+        else {
+            ignoredIDs.insert(record.id)
+            cancelAppStoreRetry(record.id)
+        }
         skippedVersions.removeValue(forKey: record.id)
         persistSkippedVersions()
         defaults.set(Array(ignoredIDs).sorted(), forKey: "ignoredIDs")

@@ -95,10 +95,8 @@ public enum UpdateEngine {
         let total = packages.count + masApps.count + sparkleApps.count + microsoftApps.count + extensions.extensions.count + githubTargets.count + electronTargets.count + steamRecords.filter(SteamUpdateChecker.isCheckable).count
         let counter = ProgressCounter(total: total, progress: progress)
         await progress(ScanProgress("正在查询更新源…", total: total))
-        async let storeResults = checkInBatches(masApps) { app in
-            let result = await AppStoreUpdateChecker.check(app: app, primaryRegion: options.primaryRegion)
-            await counter.didCheck(app.appName)
-            return result
+        async let storeResults = AppStoreUpdateChecker.checkAll(apps: masApps, primaryRegion: options.primaryRegion) { name in
+            await counter.didCheck(name)
         }
         async let sparkleResults = checkInBatches(sparkleApps) { app in
             let result = await SparkleUpdateChecker.check(app: app, includePreReleases: options.includePreReleases)

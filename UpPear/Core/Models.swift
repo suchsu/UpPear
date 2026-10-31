@@ -103,14 +103,17 @@ public struct UpdateRecord: Identifiable, Codable, Sendable {
     public var electron: ElectronUpdateInfo?
     public var steam: SteamUpdateInfo?
     public var appStoreMac: AppStoreMacAvailability?
+    public var appStoreQuery: AppStoreQueryInfo?
     public var statusTitle: String {
+        if source == .appStore, [.failed, .unverified].contains(state), let issue = appStoreQuery?.issue { return issue.title }
         if state == .managed { return "由 \(source.title) 管理" }
         if state == .current, source == .steam { return "Mac 未发现更新" }
         if state == .unverified, source == .steam, steam?.installationConfirmed == false { return "未确认安装" }
         if source == .appStore, app?.wrapped == true {
             if state == .incompatible, appStoreMac?.status == .unavailable { return "Mac 不可安装" }
-            if state == .unverified { return "兼容性待确认" }
+            if state == .unverified { return "版本信息不足" }
         }
+        if source == .appStore, state == .failed { return "查询失败" }
         return state.title
     }
     public var targetKind: UpdateTargetKind {
