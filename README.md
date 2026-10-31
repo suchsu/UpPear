@@ -57,8 +57,6 @@ PopClip 官方目录数据通常缓存一小时；网络不可用时保留已有
 
 自定义 Homebrew tap 的静态定义需要自行刷新；`latest`、`HEAD` 等无法可靠比较的版本会明确标明。商店元数据与账号实际可更新时间可能存在差异。
 
-更新来源的实现依据见 [1.1 更新来源说明](docs/UPDATES_1_1.md)。
-
 ## 来源与许可
 
 UpPear 基于 [Pearcleaner 5.4.3](https://github.com/alienator88/Pearcleaner/tree/c52695d90c43f60abd5cd10c363f2e122c65f191) 的更新功能开发，灵感和更新引擎来自 Alin Lupascu / alienator88 的 Pearcleaner。来源映射见 [PROVENANCE.md](docs/PROVENANCE.md)。
