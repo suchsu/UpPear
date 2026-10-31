@@ -4,15 +4,16 @@ UpPear — Keep your Mac apps up to date.
 
 UpPear 是一款原生 macOS 更新管理器，可统一查看应用、软件包和 PopClip 扩展的更新。作者：**suchsu**。
 
-**UpPear 1.2.1 现已发布。** 支持 macOS 14 或更高版本，兼容 Apple Silicon 和 Intel Mac，安装包已完成开发者签名和 Apple 公证。
+**UpPear 1.2.2 现已发布。** 支持 macOS 14 或更高版本，兼容 Apple Silicon 和 Intel Mac，安装包已完成开发者签名和 Apple 公证。
 
-[下载 DMG 安装包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.2.1/UpPear-1.2.1-macOS-universal.dmg) · [下载 ZIP 压缩包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.2.1/UpPear-1.2.1-macOS-universal.zip) · [查看 1.2.1 发行说明](https://github.com/suchsu/UpPear/releases/tag/uppear-v1.2.1)
+[下载 DMG 安装包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.2.2/UpPear-1.2.2-macOS-universal.dmg) · [下载 ZIP 压缩包](https://github.com/suchsu/UpPear/releases/download/uppear-v1.2.2/UpPear-1.2.2-macOS-universal.zip) · [查看 1.2.2 发行说明](https://github.com/suchsu/UpPear/releases/tag/uppear-v1.2.2)
 
-## 1.2.1 更新内容
+## 1.2.2 更新内容
 
-- Steam 游戏现由 UpPear 检查更新，安装更新交给 Steam。
+- 改善 App Store 版本查询，修复查询失败被误判为兼容性待确认的问题。
+- 支持单独重试失败的商店查询，保留当前选择和操作。
 
-1.1.0 及更早版本需手动安装新版；1.2.0 可通过 UpPear 自身更新功能获取。
+1.1.0 及更早版本需手动安装新版；1.2.0 及更高版本可通过 UpPear 自身更新功能获取。
 
 ## 支持的更新来源
 
